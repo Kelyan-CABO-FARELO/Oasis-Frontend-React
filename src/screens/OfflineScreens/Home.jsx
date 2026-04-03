@@ -15,7 +15,7 @@ const Home = () => {
                     className="absolute z-0 w-auto min-w-full min-h-full max-w-none object-cover opacity-80"
                 >
                     {/* On utilise la constante VIDEO_URL pour le chemin */}
-                    <source src={`${VIDEO_URL}/presentation.mp4`} type="video/mp4" />
+                    <source src={`${VIDEO_URL}/presentation_camping.mp4`} type="video/mp4" />
                     Votre navigateur ne supporte pas la lecture de vidéos.
                 </video>
 
@@ -26,7 +26,7 @@ const Home = () => {
                 {/* Contenu du Hero */}
                 <div className="relative z-20 text-center px-6 max-w-4xl">
                     <span className="inline-block px-5 py-2 mb-6 text-sm font-bold tracking-[0.3em] text-amber-700 uppercase bg-white/90 rounded-full shadow-sm">
-                        Expérience 5 Étoiles
+                        Expérience 3 Étoiles
                     </span>
                     <h1 className="text-6xl md:text-8xl font-black text-slate-900 mb-6 tracking-tight drop-shadow-sm">
                         L'Oasis<span className="text-amber-500">.</span>
