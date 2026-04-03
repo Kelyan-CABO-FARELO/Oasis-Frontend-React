@@ -1,7 +1,7 @@
 import {createBrowserRouter} from "react-router-dom";
 import ErrorPage from "../screens/ErrorScreens/ErrorPage.jsx";
 import Home from "../screens/OfflineScreens/Home.jsx";
-import Reserved from "../screens/OfflineScreens/Reserved.jsx";
+import Product from "../screens/OfflineScreens/Product.jsx";
 
 const OfflineRouter = createBrowserRouter([
     {
@@ -12,8 +12,8 @@ const OfflineRouter = createBrowserRouter([
                 element: <Home/>, // Élément retourné
             },
             {
-                path: "/reserved",
-                element: <Reserved/>
+                path: "/product",
+                element: <Product/>
             }
         ],
     },

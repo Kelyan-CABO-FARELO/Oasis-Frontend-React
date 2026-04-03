@@ -50,7 +50,7 @@ const Home = () => {
                 {/* Badge Dates d'Ouverture */}
                 <div className="flex justify-center mb-16">
                     <div className="bg-emerald-500 text-white px-10 py-4 rounded-3xl shadow-2xl flex items-center gap-4 border-4 border-white">
-                        <a href="/reserved">
+                        <a href="/product">
                             <span className="text-2xl">☀️</span>
                             <span className="font-bold text-lg uppercase tracking-wide">
                                 Ouvert du 05 mai au 10 octobre
