@@ -1,2 +1,24 @@
 @import "tailwindcss";
 
+@theme {
+    /* Couleurs Solaire & Chaleureuses */
+    --color-sun-light: #fffcf0;    /* Blanc cassé très chaud */
+    --color-sun-beam: #fef3c7;     /* Jaune très clair (ambre 100) */
+    --color-sun-primary: #fbbf24;  /* Ambre vif */
+    --color-sun-hot: #f59e0b;      /* Ambre foncé */
+    --color-sky-clear: #bae6fd;    /* Bleu ciel léger pour contraste */
+
+    --font-display: 'Plus Jakarta Sans', sans-serif;
+}
+
+body {
+    /* Fond très clair et chaud par défaut */
+    background-color: var(--color-sun-light);
+    color: #451a03; /* Brun très foncé au lieu de noir pour plus de douceur */
+    font-family: var(--font-display);
+}
+
+/* Effet de lueur solaire */
+.sun-glow {
+    background: radial-gradient(circle at center, var(--color-sun-beam) 0%, transparent 70%);
+}

@@ -16,3 +16,6 @@ export const API_URL = `${API_ROOT}/api`;
 
 // Images générales des products
 export const IMAGE_URL = `${API_ROOT}/images`;
+
+// Videos générales
+export const VIDEO_URL = `${API_ROOT}/videos`;
