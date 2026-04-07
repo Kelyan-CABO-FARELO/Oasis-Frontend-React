@@ -86,7 +86,7 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
 
     return (
         <div className="w-full bg-white rounded-[2rem] shadow-xl p-4 border border-amber-50 overflow-hidden">
-            <div className="w-full overflow-auto max-h-[70vh] cursor-grab active:cursor-grabbing">
+            <div className="w-full relative">
                 {/* 🗺️ VOTRE NOUVEAU SVG CORRIGÉ (Formaté pour React) */}
                 <svg ref={svgRef} width="100%" viewBox="0 0 2774 2065" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <g id="PlanCamping" clipPath="url(#clip0_1_2)">
