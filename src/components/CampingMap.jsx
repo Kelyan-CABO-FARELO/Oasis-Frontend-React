@@ -23,18 +23,24 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
     };
 
     useEffect(() => {
-        if (!svgRef.current) return;
+        if (!svgRef.current || allProducts.length === 0) return;
 
         const elements = svgRef.current.querySelectorAll('[id^="product-"]');
 
         elements.forEach(el => {
-            // 🛑 On ignore les sous-éléments générés par Figma (ex: product-156_2)
+            // On ignore les sous-éléments avec un underscore (les petits bouts de dessin)
             if (el.id.includes('_')) return;
 
+            // On récupère l'ID exact du produit (de 1 à 90)
             const productId = parseInt(el.id.replace('product-', ''), 10);
+
+            // 🛑 SÉCURITÉ : On ignore les sous-rectangles des caravanes qui ont un ID > 90
+            if (isNaN(productId) || productId > 90) return;
+
             const product = allProducts.find(p => p.id === productId);
             const isAvailable = availableProducts.some(p => p.id === productId);
 
+            // Si l'hébergement n'existe pas en BDD, on le grise
             if (!product) {
                 el.style.fill = "#E2E8F0";
                 el.style.opacity = "0.5";
@@ -74,8 +80,7 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
 
             // Événement au clic
             el.onclick = (e) => {
-                e.stopPropagation(); // Empêche le double déclenchement
-
+                e.stopPropagation();
                 if (matchesCategory && isAvailable && capacity >= totalOccupants) {
                     alert(`Sélectionné : ${product.title} \n(Capacité max : ${capacity} personnes)`);
                 }
@@ -85,7 +90,7 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
     }, [availableProducts, allProducts, selectedCategory, totalOccupants]);
 
     return (
-        <div className="w-full bg-white rounded-[2rem] shadow-xl p-4 border border-amber-50 overflow-hidden">
+        <div className="w-full bg-white rounded-[2rem] shadow-xl p-4 md:p-8 border border-amber-50 overflow-hidden">
             <div className="w-full relative">
                 {/* 🗺️ VOTRE NOUVEAU SVG CORRIGÉ (Formaté pour React) */}
                 <svg ref={svgRef} width="100%" viewBox="0 0 2774 2065" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -163,125 +168,124 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
                             <rect id="Rectangle 52_2" x="248" y="225" width="603" height="103" fill="#D9D9D9"/>
                             <rect id="Rectangle 9_3" x="1648" y="1784" width="248" height="62" fill="#D9D9D9"/>
                         </g>
-
-                        <rect id="product-117" x="892" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
-                        <rect id="product-133" x="1679" y="1747" width="77" height="148" transform="rotate(-90 1679 1747)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-137" x="1679" y="1378" width="77" height="148" transform="rotate(-90 1679 1378)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-141" x="1389" y="1624" width="77" height="148" transform="rotate(-90 1389 1624)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-107" x="1389" y="1747" width="77" height="148" transform="rotate(-90 1389 1747)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-147" x="1389" y="1501" width="77" height="148" transform="rotate(-90 1389 1501)" stroke="black" strokeWidth="4"/>
-                        <path id="product-148" d="M1537 1301V1378H1389V1301H1537Z" stroke="black" strokeWidth="4"/>
-                        <rect id="product-106" x="1389" y="1255" width="77" height="148" transform="rotate(-90 1389 1255)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-108" x="1953" y="1013" width="77" height="171" stroke="black" strokeWidth="4"/>
-                        <rect id="product-114" x="2359" y="1013" width="77" height="171" stroke="black" strokeWidth="4"/>
-                        <rect id="product-128" x="1953" y="697" width="77" height="171" stroke="black" strokeWidth="4"/>
-                        <rect id="product-109" x="1250" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-143" x="1393" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-103" x="1536" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-140" x="1107" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-102" x="1822" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-110" x="1393" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-112" x="1536" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-116" x="1679" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-119" x="1822" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-144" x="2359" y="697" width="77" height="171" stroke="black" strokeWidth="4"/>
-                        <rect id="product-138" x="2156" y="697" width="77" height="171" stroke="black" strokeWidth="4"/>
-                        <rect id="product-113" x="2156" y="1013" width="77" height="171" stroke="black" strokeWidth="4"/>
-                        <rect id="product-145" x="1679" y="1255" width="77" height="148" transform="rotate(-90 1679 1255)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-136" x="1679" y="1501" width="77" height="148" transform="rotate(-90 1679 1501)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-132" x="1679" y="1624" width="77" height="148" transform="rotate(-90 1679 1624)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-130" x="761" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
-                        <rect id="product-99" x="757" y="1747" width="77" height="131" transform="rotate(-90 757 1747)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-135" x="1046" y="1747" width="77" height="131" transform="rotate(-90 1046 1747)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-105" x="1046" y="1132" width="77" height="131" transform="rotate(-90 1046 1132)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-104" x="1046" y="1255" width="77" height="131" transform="rotate(-90 1046 1255)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-173" x="67" y="1331" width="96" height="96" transform="rotate(-90 67 1331)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-176" x="67" y="945" width="96" height="96" transform="rotate(-90 67 945)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-175" x="67" y="1041" width="96" height="96" transform="rotate(-90 67 1041)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-177" x="67" y="1523" width="96" height="96" transform="rotate(-90 67 1523)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-159" x="67" y="1427" width="96" height="96" transform="rotate(-90 67 1427)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-171" x="67" y="1137" width="96" height="96" transform="rotate(-90 67 1137)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-170" x="67" y="1234" width="96" height="96" transform="rotate(-90 67 1234)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-183" x="284" y="1331" width="96" height="96" transform="rotate(-90 284 1331)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-178" x="284" y="945" width="96" height="96" transform="rotate(-90 284 945)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-160" x="284" y="1041" width="96" height="96" transform="rotate(-90 284 1041)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-186" x="284" y="1523" width="96" height="96" transform="rotate(-90 284 1523)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-185" x="284" y="1427" width="96" height="96" transform="rotate(-90 284 1427)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-179" x="284" y="1137" width="96" height="96" transform="rotate(-90 284 1137)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-181" x="284" y="1234" width="96" height="96" transform="rotate(-90 284 1234)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-167" x="67" y="849" width="96" height="96" transform="rotate(-90 67 849)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-161" x="284" y="754" width="96" height="96" transform="rotate(-90 284 754)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-162" x="284" y="850" width="96" height="96" transform="rotate(-90 284 850)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-163" x="67" y="655" width="96" height="96" transform="rotate(-90 67 655)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-168" x="267" y="193" width="116" height="116" transform="rotate(-90 267 193)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-174" x="616" y="193" width="116" height="116" transform="rotate(-90 616 193)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-180" x="732" y="193" width="116" height="116" transform="rotate(-90 732 193)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-172" x="500" y="193" width="116" height="116" transform="rotate(-90 500 193)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-169" x="384" y="193" width="116" height="116" transform="rotate(-90 384 193)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-184" x="268" y="483" width="116" height="116" transform="rotate(-90 268 483)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-188" x="617" y="483" width="116" height="116" transform="rotate(-90 617 483)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-165" x="57" y="343" width="116" height="116" transform="rotate(-90 57 343)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-164" x="733" y="483" width="116" height="116" transform="rotate(-90 733 483)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-187" x="501" y="483" width="116" height="116" transform="rotate(-90 501 483)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-182" x="385" y="483" width="116" height="116" transform="rotate(-90 385 483)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-166" x="67" y="752" width="96" height="96" transform="rotate(-90 67 752)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-146" x="1046" y="1378" width="77" height="131" transform="rotate(-90 1046 1378)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-139" x="1046" y="1624" width="77" height="131" transform="rotate(-90 1046 1624)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-142" x="1046" y="1501" width="77" height="131" transform="rotate(-90 1046 1501)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-131" x="757" y="1009" width="77" height="131" transform="rotate(-90 757 1009)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-118" x="757" y="1378" width="77" height="131" transform="rotate(-90 757 1378)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-124" x="757" y="1255" width="77" height="131" transform="rotate(-90 757 1255)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-129" x="757" y="1132" width="77" height="131" transform="rotate(-90 757 1132)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-111" x="757" y="1624" width="77" height="131" transform="rotate(-90 757 1624)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-115" x="757" y="1501" width="77" height="131" transform="rotate(-90 757 1501)" stroke="black" strokeWidth="4"/>
-                        <rect id="product-127" x="1416" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
-                        <rect id="product-101" x="1547" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
-                        <rect id="product-126" x="1285" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
-                        <rect id="product-100" x="1023" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
-                        <rect id="product-122" x="1154" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
-                        <rect id="product-120" x="1965" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-121" x="1679" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-123" x="1107" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-125" x="964" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <rect id="product-134" x="1250" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
-                        <g id="product-157">
-                            <rect id="product-157_2" x="1589" y="513" width="56" height="131" stroke="black" strokeWidth="4"/>
+                        <rect id="product-43" x="892" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
+                        <rect id="product-37" x="1679" y="1747" width="77" height="148" transform="rotate(-90 1679 1747)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-34" x="1679" y="1378" width="77" height="148" transform="rotate(-90 1679 1378)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-31" x="1389" y="1624" width="77" height="148" transform="rotate(-90 1389 1624)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-32" x="1389" y="1747" width="77" height="148" transform="rotate(-90 1389 1747)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-30" x="1389" y="1501" width="77" height="148" transform="rotate(-90 1389 1501)" stroke="black" strokeWidth="4"/>
+                        <path id="product-29" d="M1537 1301V1378H1389V1301H1537Z" stroke="black" strokeWidth="4"/>
+                        <rect id="product-28" x="1389" y="1255" width="77" height="148" transform="rotate(-90 1389 1255)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-50" x="1953" y="1013" width="77" height="171" stroke="black" strokeWidth="4"/>
+                        <rect id="product-48" x="2359" y="1013" width="77" height="171" stroke="black" strokeWidth="4"/>
+                        <rect id="product-45" x="1953" y="697" width="77" height="171" stroke="black" strokeWidth="4"/>
+                        <rect id="product-3" x="1250" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-12" x="1393" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-11" x="1536" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-14" x="1107" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-9" x="1822" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-4" x="1393" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-5" x="1536" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-6" x="1679" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-7" x="1822" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-47" x="2359" y="697" width="77" height="171" stroke="black" strokeWidth="4"/>
+                        <rect id="product-46" x="2156" y="697" width="77" height="171" stroke="black" strokeWidth="4"/>
+                        <rect id="product-49" x="2156" y="1013" width="77" height="171" stroke="black" strokeWidth="4"/>
+                        <rect id="product-33" x="1679" y="1255" width="77" height="148" transform="rotate(-90 1679 1255)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-35" x="1679" y="1501" width="77" height="148" transform="rotate(-90 1679 1501)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-36" x="1679" y="1624" width="77" height="148" transform="rotate(-90 1679 1624)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-44" x="761" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
+                        <rect id="product-21" x="757" y="1747" width="77" height="131" transform="rotate(-90 757 1747)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-22" x="1046" y="1747" width="77" height="131" transform="rotate(-90 1046 1747)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-27" x="1046" y="1132" width="77" height="131" transform="rotate(-90 1046 1132)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-26" x="1046" y="1255" width="77" height="131" transform="rotate(-90 1046 1255)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-68" x="67" y="1331" width="96" height="96" transform="rotate(-90 67 1331)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-64" x="67" y="945" width="96" height="96" transform="rotate(-90 67 945)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-65" x="67" y="1041" width="96" height="96" transform="rotate(-90 67 1041)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-70" x="67" y="1523" width="96" height="96" transform="rotate(-90 67 1523)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-69" x="67" y="1427" width="96" height="96" transform="rotate(-90 67 1427)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-66" x="67" y="1137" width="96" height="96" transform="rotate(-90 67 1137)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-67" x="67" y="1234" width="96" height="96" transform="rotate(-90 67 1234)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-77" x="284" y="1331" width="96" height="96" transform="rotate(-90 284 1331)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-73" x="284" y="945" width="96" height="96" transform="rotate(-90 284 945)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-74" x="284" y="1041" width="96" height="96" transform="rotate(-90 284 1041)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-79" x="284" y="1523" width="96" height="96" transform="rotate(-90 284 1523)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-78" x="284" y="1427" width="96" height="96" transform="rotate(-90 284 1427)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-75" x="284" y="1137" width="96" height="96" transform="rotate(-90 284 1137)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-76" x="284" y="1234" width="96" height="96" transform="rotate(-90 284 1234)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-63" x="67" y="849" width="96" height="96" transform="rotate(-90 67 849)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-71" x="284" y="754" width="96" height="96" transform="rotate(-90 284 754)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-72" x="284" y="850" width="96" height="96" transform="rotate(-90 284 850)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-61" x="67" y="655" width="96" height="96" transform="rotate(-90 67 655)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-81" x="267" y="199" width="116" height="116" transform="rotate(-90 267 199)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-84" x="616" y="199" width="116" height="116" transform="rotate(-90 616 199)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-85" x="732" y="199" width="116" height="116" transform="rotate(-90 732 199)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-83" x="500" y="199" width="116" height="116" transform="rotate(-90 500 199)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-82" x="384" y="199" width="116" height="116" transform="rotate(-90 384 199)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-89" x="268" y="489" width="116" height="116" transform="rotate(-90 268 489)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-87" x="617" y="489" width="116" height="116" transform="rotate(-90 617 489)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-80" x="57" y="349" width="116" height="116" transform="rotate(-90 57 349)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-86" x="733" y="489" width="116" height="116" transform="rotate(-90 733 489)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-90" x="501" y="489" width="116" height="116" transform="rotate(-90 501 489)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-88" x="385" y="489" width="116" height="116" transform="rotate(-90 385 489)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-62" x="67" y="752" width="96" height="96" transform="rotate(-90 67 752)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-25" x="1046" y="1378" width="77" height="131" transform="rotate(-90 1046 1378)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-23" x="1046" y="1624" width="77" height="131" transform="rotate(-90 1046 1624)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-24" x="1046" y="1501" width="77" height="131" transform="rotate(-90 1046 1501)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-15" x="757" y="1009" width="77" height="131" transform="rotate(-90 757 1009)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-18" x="757" y="1378" width="77" height="131" transform="rotate(-90 757 1378)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-17" x="757" y="1255" width="77" height="131" transform="rotate(-90 757 1255)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-16" x="757" y="1132" width="77" height="131" transform="rotate(-90 757 1132)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-20" x="757" y="1624" width="77" height="131" transform="rotate(-90 757 1624)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-19" x="757" y="1501" width="77" height="131" transform="rotate(-90 757 1501)" stroke="black" strokeWidth="4"/>
+                        <rect id="product-39" x="1416" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
+                        <rect id="product-38" x="1547" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
+                        <rect id="product-40" x="1285" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
+                        <rect id="product-42" x="1023" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
+                        <rect id="product-41" x="1154" y="1877" width="77" height="148" stroke="black" strokeWidth="4"/>
+                        <rect id="product-8" x="1965" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-10" x="1679" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-2" x="1107" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-1" x="964" y="60" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <rect id="product-13" x="1250" y="283" width="77" height="116" stroke="black" strokeWidth="4"/>
+                        <g id="product-53">
+                            <rect id="product-157" x="1589" y="513" width="56" height="131" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1" d="M1616.5 672L1602.21 643.5H1630.79L1616.5 672Z" fill="black"/>
                         </g>
-                        <g id="product-156">
-                            <rect id="product-156_2" x="2471" y="324" width="56" height="106" stroke="black" strokeWidth="4"/>
+                        <g id="product-57">
+                            <rect id="product-156" x="2471" y="324" width="56" height="106" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_2" d="M2498.5 461L2484.21 432.5H2512.79L2498.5 461Z" fill="black"/>
                         </g>
-                        <g id="product-158">
-                            <rect id="product-158_2" x="2226" y="324" width="56" height="106" stroke="black" strokeWidth="4"/>
+                        <g id="product-56">
+                            <rect id="product-158" x="2226" y="324" width="56" height="106" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_3" d="M2253.5 461L2239.21 432.5H2267.79L2253.5 461Z" fill="black"/>
                         </g>
-                        <g id="product-151">
-                            <rect id="product-151_2" x="2167" y="60" width="56" height="86" stroke="black" strokeWidth="4"/>
+                        <g id="product-60">
+                            <rect id="product-151" x="2167" y="60" width="56" height="86" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_4" d="M2194.5 178L2180.21 149.5H2208.79L2194.5 178Z" fill="black"/>
                         </g>
-                        <g id="product-155">
-                            <rect id="product-155_2" x="2563" y="52" width="56" height="86" stroke="black" strokeWidth="4"/>
+                        <g id="product-58">
+                            <rect id="product-155" x="2563" y="52" width="56" height="86" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_5" d="M2590.5 170L2576.21 141.5H2604.79L2590.5 170Z" fill="black"/>
                         </g>
-                        <g id="product-152">
-                            <rect id="product-152_2" x="2390" y="60" width="56" height="86" stroke="black" strokeWidth="4"/>
+                        <g id="product-59">
+                            <rect id="product-152" x="2390" y="60" width="56" height="86" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_6" d="M2417.5 178L2403.21 149.5H2431.79L2417.5 178Z" fill="black"/>
                         </g>
-                        <g id="product-149">
-                            <rect id="product-149_2" x="1344" y="513" width="56" height="131" stroke="black" strokeWidth="4"/>
+                        <g id="product-52">
+                            <rect id="product-149" x="1344" y="513" width="56" height="131" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_7" d="M1374.5 675L1360.21 646.5H1388.79L1374.5 675Z" fill="black"/>
                         </g>
-                        <g id="product-150">
-                            <rect id="product-150_2" x="1445" y="912" width="56" height="131" transform="rotate(-180 1445 912)" stroke="black" strokeWidth="4"/>
+                        <g id="product-55">
+                            <rect id="product-150" x="1445" y="912" width="56" height="131" transform="rotate(-180 1445 912)" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_8" d="M1418.5 757L1432.79 785.5H1404.21L1418.5 757Z" fill="black"/>
                         </g>
-                        <g id="product-153">
-                            <rect id="product-153_2" x="1195" y="912" width="56" height="131" transform="rotate(-180 1195 912)" stroke="black" strokeWidth="4"/>
+                        <g id="product-54">
+                            <rect id="product-153" x="1195" y="912" width="56" height="131" transform="rotate(-180 1195 912)" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_9" d="M1166.5 757L1180.79 785.5H1152.21L1166.5 757Z" fill="black"/>
                         </g>
-                        <g id="product-154">
-                            <rect id="product-154_2" x="1128" y="513" width="56" height="131" stroke="black" strokeWidth="4"/>
+                        <g id="product-51">
+                            <rect id="product-154" x="1128" y="513" width="56" height="131" stroke="black" strokeWidth="4"/>
                             <path id="Polygon 1_10" d="M1155.5 675L1141.21 646.5H1169.79L1155.5 675Z" fill="black"/>
                         </g>
                     </g>
@@ -293,7 +297,7 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
                 </svg>
             </div>
 
-            <div className="flex justify-center gap-6 mt-4 text-sm font-bold text-slate-600 flex-wrap">
+            <div className="flex justify-center gap-4 md:gap-6 mt-8 text-sm font-bold text-slate-600 flex-wrap">
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-blue-500"></span> 2 à 3 pers.</span>
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-emerald-500"></span> 4 pers.</span>
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-amber-500"></span> 5 pers.</span>

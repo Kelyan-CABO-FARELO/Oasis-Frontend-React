@@ -104,7 +104,7 @@ const Product = () => {
                 <p className="mt-4 text-lg text-slate-600">Trouvez l'emplacement parfait pour votre séjour.</p>
             </div>
 
-            {/* 🛑 NOUVELLE BARRE DE RECHERCHE (Avec Adultes et Enfants) */}
+            {/* BARRE DE RECHERCHE (Avec Adultes et Enfants) */}
             <div className="max-w-5xl mx-auto mb-8 bg-white p-4 rounded-3xl shadow-xl shadow-amber-900/5 border border-amber-50">
                 <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="flex-1 w-full flex flex-col px-4">
@@ -145,7 +145,7 @@ const Product = () => {
             {error && <div className="max-w-2xl mx-auto mb-8"><ErrorMessage message={error} /></div>}
 
             <div className="max-w-7xl mx-auto mb-16">
-                {/* 🛑 On passe le nombre total d'occupants à la carte */}
+                {/* On passe le nombre total d'occupants à la carte */}
                 <CampingMap
                     allProducts={catalogProducts}
                     availableProducts={availableProducts}
