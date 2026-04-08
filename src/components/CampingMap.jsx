@@ -1,7 +1,11 @@
 import React, { useEffect, useRef } from 'react';
+// 🛑 1. NOUVEL IMPORT : On importe useNavigate pour changer de page
+import { useNavigate } from 'react-router-dom';
 
 const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOccupants }) => {
     const svgRef = useRef(null);
+    // 🛑 2. INITIALISATION : On prépare la fonction de navigation
+    const navigate = useNavigate();
 
     // 🧠 LE CERVEAU POUR DÉDUIRE LA CAPACITÉ
     const extractCapacity = (title) => {
@@ -28,7 +32,7 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
         const elements = svgRef.current.querySelectorAll('[id^="product-"]');
 
         elements.forEach(el => {
-            // On ignore les sous-éléments avec un underscore (les petits bouts de dessin)
+            // On ignore les sous-éléments avec un underscore
             if (el.id.includes('_')) return;
 
             // On récupère l'ID exact du produit (de 1 à 90)
@@ -52,7 +56,7 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
 
             let matchesCategory = false;
             if (selectedCategory === 'all') matchesCategory = true;
-            else if (selectedCategory === 'mh' && title.startsWith('m-h')) matchesCategory = true;
+            else if (selectedCategory === 'mh' && title.startsWith('mobilehome')) matchesCategory = true;
             else if (selectedCategory === 'caravane' && title.startsWith('caravane')) matchesCategory = true;
             else if (selectedCategory === 'emplacement' && title.startsWith('emplacement')) matchesCategory = true;
 
@@ -82,18 +86,19 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
             el.onclick = (e) => {
                 e.stopPropagation();
                 if (matchesCategory && isAvailable && capacity >= totalOccupants) {
-                    alert(`Sélectionné : ${product.title} \n(Capacité max : ${capacity} personnes)`);
+                    // 🛑 3. LA MAGIE : Au lieu de l'alerte, on redirige l'utilisateur vers la bonne URL
+                    navigate(`/product/${product.id}`);
                 }
             };
         });
 
-    }, [availableProducts, allProducts, selectedCategory, totalOccupants]);
+    }, [availableProducts, allProducts, selectedCategory, totalOccupants, navigate]);
 
     return (
         <div className="w-full bg-white rounded-[2rem] shadow-xl p-4 md:p-8 border border-amber-50 overflow-hidden">
-            <div className="w-full relative">
-                {/* 🗺️ VOTRE NOUVEAU SVG CORRIGÉ (Formaté pour React) */}
+            <div className="w-full relative cursor-grab active:cursor-grabbing">
                 <svg ref={svgRef} width="100%" viewBox="0 0 2774 2065" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Le même SVG qu'avant */}
                     <g id="PlanCamping" clipPath="url(#clip0_1_2)">
                         <rect width="2774" height="2065" fill="white"/>
                         <g id="Decor">

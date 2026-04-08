@@ -2,6 +2,7 @@ import {createBrowserRouter} from "react-router-dom";
 import ErrorPage from "../screens/ErrorScreens/ErrorPage.jsx";
 import Home from "../screens/OfflineScreens/Home.jsx";
 import Product from "../screens/OfflineScreens/Product.jsx";
+import ProductId from "../screens/OfflineScreens/ProductId.jsx";
 
 const OfflineRouter = createBrowserRouter([
     {
@@ -14,6 +15,10 @@ const OfflineRouter = createBrowserRouter([
             {
                 path: "/product",
                 element: <Product/>
+            },
+            {
+                path: "/product/:id",
+                element: <ProductId/>
             }
         ],
     },
