@@ -4,8 +4,8 @@ import { API_URL, IMAGE_URL } from "../../constants/apiConstant.js";
 import { useBookingContext } from "../../contexts/BookingContext.jsx";
 import PageLoader from "../../components/Loader/PageLoader.jsx";
 import BookingSummary from "../../components/Product/BookingSummary.jsx";
-// 🛑 NOUVEL IMPORT : On importe notre cerveau mathématique !
 import { calculateTripPrice } from "../../utils/pricing.js";
+import { productService } from "../../services/productService.js";
 
 const ProductId = () => {
     const { id } = useParams();
@@ -21,6 +21,9 @@ const ProductId = () => {
     const start = new Date(searchParams.startDate);
     const end = new Date(searchParams.endDate);
 
+    // 🛑 CORRECTION : On a remis le calcul de "nights" ici pour que le useEffect puisse l'utiliser !
+    const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
+
     const [product, setProduct] = useState(null);
     const [extras, setExtras] = useState({ taxeAdulte: 0, taxeEnfant: 0, piscineAdulte: 0, piscineEnfant: 0 });
     const [isLoading, setIsLoading] = useState(true);
@@ -28,13 +31,10 @@ const ProductId = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const prodRes = await fetch(`${API_URL}/products/${id}`);
-                const prodData = await prodRes.json();
+                const prodData = await productService.getById(id);
                 setProduct(prodData);
 
-                const allRes = await fetch(`${API_URL}/products?pagination=false`);
-                const allData = await allRes.json();
-                const productsList = allData['member'] || allData['hydra:member'] || (Array.isArray(allData) ? allData : []);
+                const productsList = await productService.getAll();
 
                 const findPrice = (searchTitle) => {
                     const item = productsList.find(p => p.title?.toLowerCase().includes(searchTitle.toLowerCase()));
@@ -48,9 +48,8 @@ const ProductId = () => {
                     piscineEnfant: findPrice('Accès piscine Enfant')
                 });
 
-                // Optionnel: Ajuster les jours de piscine par défaut si non définis
-                const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
-                if (poolOptions.poolDays === 1) {
+                // On ajuste les jours de piscine par défaut
+                if (poolOptions.poolDays === 1 && nights > 1) {
                     updatePoolOptions({ poolDays: nights });
                 }
 
@@ -62,11 +61,11 @@ const ProductId = () => {
             }
         };
         fetchData();
-    }, [id, navigate]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [id]);
 
     if (isLoading || !product) return <PageLoader />;
 
-    // 🧠 LE CALCUL SE FAIT EN UNE SEULE LIGNE MAINTENANT !
     const basePrice = product.prices?.[0]?.price ? product.prices[0].price / 100 : 0;
     const pricingDetails = calculateTripPrice(basePrice, start, end, adults, children, extras, poolOptions);
 
@@ -139,7 +138,6 @@ const ProductId = () => {
                 </div>
 
                 <div className="w-full lg:w-5/12">
-                    {/* 🛑 On déverse toutes les données calculées dans le résumé d'un seul coup grâce au destructuring (les "...") */}
                     <BookingSummary
                         basePrice={basePrice}
                         extras={extras}
