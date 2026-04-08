@@ -139,6 +139,7 @@ const ProductId = () => {
 
                 <div className="w-full lg:w-5/12">
                     <BookingSummary
+                        productId={id}
                         basePrice={basePrice}
                         extras={extras}
                         {...pricingDetails}

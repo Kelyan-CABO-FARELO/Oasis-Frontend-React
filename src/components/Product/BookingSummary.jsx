@@ -1,12 +1,14 @@
 import React from 'react';
 import { useBookingContext } from "../../contexts/BookingContext.jsx";
+import {useNavigate} from "react-router-dom";
 
 const BookingSummary = ({
-                            nights, basePrice, rawAccommodation,
+                            productId, nights, basePrice, rawAccommodation,
                             lowSeasonNights, highSeasonNights,
                             discountMultiplier, discountAmount,
                             totalTaxes, extras, totalPool, grandTotal
                         }) => {
+    const navigate = useNavigate();
     const { searchParams, poolOptions } = useBookingContext();
     const adults = Number(searchParams.nbAdults) || 0;
     const children = Number(searchParams.nbChildren) || 0;
@@ -100,7 +102,10 @@ const BookingSummary = ({
                 </div>
             </div>
 
-            <button className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl rounded-2xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-1 active:translate-y-0">
+            <button
+                onClick={() => navigate('/checkout', { state: { grandTotal, productId } })}
+                className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl rounded-2xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-1 active:translate-y-0"
+            >
                 Confirmer et Payer
             </button>
         </div>
