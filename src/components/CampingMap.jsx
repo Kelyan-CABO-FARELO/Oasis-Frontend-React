@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 // 🛑 1. NOUVEL IMPORT : On importe useNavigate pour changer de page
 import { useNavigate } from 'react-router-dom';
 
-const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOccupants }) => {
+const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOccupants, startDate, endDate, nbAdults, nbChildren }) => {
     const svgRef = useRef(null);
     // 🛑 2. INITIALISATION : On prépare la fonction de navigation
     const navigate = useNavigate();
@@ -86,8 +86,10 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
             el.onclick = (e) => {
                 e.stopPropagation();
                 if (matchesCategory && isAvailable && capacity >= totalOccupants) {
-                    // 🛑 3. LA MAGIE : Au lieu de l'alerte, on redirige l'utilisateur vers la bonne URL
-                    navigate(`/product/${product.id}`);
+                    // On redirige EN EMBARQUANT les données de recherche dans le "state"
+                    navigate(`/product/${product.id}`, {
+                        state: { startDate, endDate, nbAdults, nbChildren }
+                    });
                 }
             };
         });

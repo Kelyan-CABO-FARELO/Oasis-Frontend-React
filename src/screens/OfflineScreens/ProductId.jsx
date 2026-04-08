@@ -1,155 +1,198 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { API_URL, IMAGE_URL } from "../../constants/apiConstant.js";
 import PageLoader from "../../components/Loader/PageLoader.jsx";
-import ErrorMessage from "../../components/UI/ErrorMessage.jsx";
 
 const ProductId = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
 
+    // 🛑 SÉCURITÉ : Si l'utilisateur arrive ici sans avoir fait de recherche, on le renvoie à la carte !
+    const searchData = location.state;
+    if (!searchData || !searchData.startDate || !searchData.endDate) {
+        return <Navigate to="/product" replace />;
+    }
+
+    const { startDate, endDate, nbAdults, nbChildren } = searchData;
+
+    // --- ÉTATS ---
     const [product, setProduct] = useState(null);
+    const [extras, setExtras] = useState({ taxeAdulte: 0, taxeEnfant: 0, piscineAdulte: 0, piscineEnfant: 0 });
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
+
+    // Options choisies par l'utilisateur
+    const [wantsPool, setWantsPool] = useState(false);
+    const [poolDays, setPoolDays] = useState(1);
+
+    // Calcul du nombre de nuits
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const nights = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
 
     useEffect(() => {
-        const fetchSingleProduct = async () => {
+        const fetchData = async () => {
             try {
-                const response = await fetch(`${API_URL}/products/${id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/ld+json'
-                    }
+                // 1. On récupère l'hébergement cliqué
+                const prodRes = await fetch(`${API_URL}/products/${id}`, { headers: { 'Accept': 'application/ld+json' }});
+                const prodData = await prodRes.json();
+                setProduct(prodData);
+
+                // 2. On récupère TOUS les produits pour isoler les taxes et la piscine
+                const allRes = await fetch(`${API_URL}/products`, { headers: { 'Accept': 'application/ld+json' }});
+                const allData = await allRes.json();
+                const productsList = allData['hydra:member'] || [];
+
+                // On cherche les prix exacts dans la BDD (divisés par 100 pour les euros)
+                const findPrice = (title) => {
+                    const item = productsList.find(p => p.title.includes(title));
+                    return item?.prices?.[0]?.price ? item.prices[0].price / 100 : 0;
+                };
+
+                setExtras({
+                    taxeAdulte: findPrice('Taxe de séjour Adulte'),
+                    taxeEnfant: findPrice('Taxe de séjour Enfant'),
+                    piscineAdulte: findPrice('Accès piscine Adulte'),
+                    piscineEnfant: findPrice('Accès piscine Enfant')
                 });
 
-                if (!response.ok) {
-                    throw new Error("L'hébergement demandé est introuvable ou indisponible.");
-                }
-
-                const data = await response.json();
-                setProduct(data);
-
             } catch (err) {
-                console.error("Erreur de chargement :", err);
-                setError(err.message);
+                console.error(err);
+                navigate('/product');
             } finally {
                 setIsLoading(false);
             }
         };
+        fetchData();
+    }, [id, navigate]);
 
-        fetchSingleProduct();
-    }, [id]);
+    if (isLoading || !product) return <PageLoader />;
 
-    if (isLoading) return <PageLoader />;
+    // --- CALCULS DU PANIER ---
+    const basePrice = product.prices?.[0]?.price ? product.prices[0].price / 100 : 0;
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-[#fffdf0] flex flex-col items-center justify-center p-6">
-                <div className="max-w-md w-full">
-                    <ErrorMessage message={error} />
-                    <button onClick={() => navigate('/product')} className="mt-6 w-full py-3 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors">
-                        Retourner au plan du camping
-                    </button>
-                </div>
-            </div>
-        );
+    const totalAccommodation = basePrice * nights;
+    const totalTaxes = (extras.taxeAdulte * nbAdults * nights) + (extras.taxeEnfant * nbChildren * nights);
+
+    let totalPool = 0;
+    if (wantsPool) {
+        totalPool = (extras.piscineAdulte * nbAdults * poolDays) + (extras.piscineEnfant * nbChildren * poolDays);
     }
 
-    if (!product) return null;
+    const grandTotal = totalAccommodation + totalTaxes + totalPool;
 
-    // --- FORMATAGE DES PRIX ---
-    const basePrice = product.prices?.[0]?.price ? (product.prices[0].price / 100).toFixed(2) : "0.00";
-    const adultPrice = product.prices?.[0]?.adultPrice ? (product.prices[0].adultPrice / 100).toFixed(2) : null;
-    const childPrice = product.prices?.[0]?.childPrice ? (product.prices[0].childPrice / 100).toFixed(2) : null;
-    const hasExtraFees = adultPrice > 0 || childPrice > 0;
-
-    // 🛑 LECTURE DE L'IMAGE DEPUIS LA BASE DE DONNÉES
-    // On vérifie s'il y a un média, et on construit l'URL complète vers le backend
     const imagePath = product.media?.[0]?.path ? `${IMAGE_URL}/${product.media[0].path}` : null;
 
     return (
-        <div className="min-h-screen bg-[#fffdf0] p-6 md:p-12 font-sans text-slate-800">
-            <div className="max-w-6xl mx-auto mb-8">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-amber-700 font-bold hover:text-amber-600 transition-colors bg-amber-100 hover:bg-amber-200 px-5 py-2 rounded-full w-max"
-                >
-                    <span>←</span> Retour au plan interactif
-                </button>
-            </div>
+        <div className="min-h-screen bg-[#fffdf0] p-6 md:p-12 font-sans text-slate-800 pb-24">
+            <button onClick={() => navigate(-1)} className="mb-8 font-bold text-amber-700 hover:text-amber-600 bg-amber-100 px-5 py-2 rounded-full flex items-center gap-2">
+                ← Modifier ma recherche
+            </button>
 
-            <div className="max-w-6xl mx-auto bg-white rounded-[2.5rem] shadow-2xl shadow-amber-900/5 border border-amber-50 overflow-hidden">
-                <div className="flex flex-col lg:flex-row">
+            <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-10">
 
-                    {/* COLONNE GAUCHE : IMAGE DE LA BDD */}
-                    <div className="w-full lg:w-1/2 relative bg-slate-100 min-h-[300px] lg:min-h-full flex items-center justify-center">
-                        {imagePath ? (
-                            <img
-                                src={imagePath}
-                                alt={product.title}
-                                className="absolute inset-0 w-full h-full object-cover"
-                            />
-                        ) : (
-                            <span className="text-slate-400 font-bold">Aucune image disponible</span>
-                        )}
-                        <div className="absolute top-6 left-6">
-                            <span className="px-4 py-2 bg-white/90 backdrop-blur-sm text-emerald-700 font-black text-sm uppercase tracking-widest rounded-full shadow-lg">
-                                Disponible
-                            </span>
+                {/* COLONNE GAUCHE : INFOS DE L'HÉBERGEMENT */}
+                <div className="w-full lg:w-7/12">
+                    <div className="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-amber-50">
+                        <div className="h-80 bg-slate-100 relative">
+                            {imagePath ? (
+                                <img src={imagePath} alt={product.title} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold">Image non disponible</div>
+                            )}
+                        </div>
+                        <div className="p-8 md:p-10">
+                            <h1 className="text-4xl font-black text-slate-900 mb-4">{product.title}</h1>
+                            <p className="text-slate-600 leading-relaxed mb-6">{product.description}</p>
+
+                            <div className="bg-slate-50 p-4 rounded-2xl flex justify-between items-center border border-slate-100">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-400 uppercase">Votre séjour</p>
+                                    <p className="font-bold text-slate-700">Du {start.toLocaleDateString('fr-FR')} au {end.toLocaleDateString('fr-FR')}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-bold text-slate-400 uppercase">Voyageurs</p>
+                                    <p className="font-bold text-slate-700">{nbAdults} Adulte(s), {nbChildren} Enfant(s)</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* COLONNE DROITE : INFOS & PRIX */}
-                    <div className="w-full lg:w-1/2 p-8 md:p-12 flex flex-col justify-between">
-                        <div>
-                            <h1 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 leading-tight">
-                                {product.title}
-                            </h1>
+                    {/* BLOC OPTIONS (PISCINE) */}
+                    <div className="mt-8 bg-white rounded-[2rem] shadow-xl p-8 md:p-10 border border-emerald-50">
+                        <h2 className="text-2xl font-black text-slate-900 mb-2">Options et Suppléments</h2>
+                        <p className="text-slate-500 mb-6">Personnalisez votre séjour avec nos services exclusifs.</p>
 
-                            <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                                {product.description || "Profitez de cet hébergement de qualité pour vos vacances dans notre domaine."}
-                            </p>
+                        <label className="flex items-start gap-4 p-6 rounded-2xl border-2 cursor-pointer transition-all hover:bg-slate-50 ${wantsPool ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100'}">
+                            <input
+                                type="checkbox"
+                                className="w-6 h-6 mt-1 accent-emerald-500 cursor-pointer"
+                                checked={wantsPool}
+                                onChange={(e) => setWantsPool(e.target.checked)}
+                            />
+                            <div className="flex-1">
+                                <p className="font-bold text-lg text-slate-800">Accès Espace Aquatique 🏊‍♂️</p>
+                                <p className="text-sm text-slate-500 mb-4">Profitez de nos toboggans et piscines chauffées. Tarif calculé selon le nombre de voyageurs.</p>
 
-                            <div className="flex flex-wrap gap-3 mb-10">
-                                <span className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-sm font-bold border border-slate-100"><span className="text-amber-500">☀️</span> Terrasse</span>
-                                <span className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-sm font-bold border border-slate-100"><span className="text-emerald-500">🌳</span> Cadre nature</span>
-                                <span className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-600 rounded-xl text-sm font-bold border border-slate-100"><span className="text-blue-500">🏊‍♂️</span> Accès Piscine</span>
+                                {wantsPool && (
+                                    <div className="flex items-center gap-4 bg-white p-3 rounded-xl border border-slate-200 w-max shadow-sm">
+                                        <label className="text-sm font-bold text-slate-600">Pour combien de jours ?</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max={nights}
+                                            value={poolDays}
+                                            onChange={(e) => setPoolDays(Math.min(nights, Math.max(1, e.target.value)))}
+                                            className="w-16 p-2 text-center font-bold border border-slate-300 rounded-lg outline-none focus:border-emerald-500"
+                                        />
+                                    </div>
+                                )}
                             </div>
-                        </div>
-
-                        {/* BLOC DE PRIX */}
-                        <div className="bg-amber-50/50 p-6 md:p-8 rounded-[2rem] border border-amber-100">
-                            <div className="flex justify-between items-end mb-6">
-                                <div>
-                                    <p className="text-sm text-slate-500 font-bold uppercase tracking-wider mb-1">Tarif de base</p>
-                                    <p className="text-4xl font-black text-amber-600">
-                                        {basePrice} € <span className="text-lg text-slate-500 font-medium">/ nuit</span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            {hasExtraFees && (
-                                <div className="pt-4 border-t border-amber-200/60 mb-6 space-y-2">
-                                    <p className="text-sm font-semibold text-slate-600 flex justify-between">
-                                        <span>Adulte supplémentaire</span>
-                                        <span className="font-bold text-slate-800">+{adultPrice} € / nuit</span>
-                                    </p>
-                                    <p className="text-sm font-semibold text-slate-600 flex justify-between">
-                                        <span>Enfant supplémentaire</span>
-                                        <span className="font-bold text-slate-800">+{childPrice} € / nuit</span>
-                                    </p>
-                                </div>
-                            )}
-
-                            <button
-                                onClick={() => alert("Direction le panier ! 🛒")}
-                                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg rounded-2xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-1 active:translate-y-0"
-                            >
-                                Passer à la réservation
-                            </button>
-                        </div>
+                        </label>
                     </div>
                 </div>
+
+                {/* COLONNE DROITE : LE RÉCAPITULATIF DE PAIEMENT */}
+                <div className="w-full lg:w-5/12">
+                    <div className="bg-amber-50/80 rounded-[2rem] shadow-2xl p-8 md:p-10 border border-amber-200 sticky top-10">
+                        <h2 className="text-2xl font-black text-slate-900 mb-6">Récapitulatif</h2>
+
+                        <div className="space-y-4 mb-6 text-slate-700 font-medium">
+                            <div className="flex justify-between items-center">
+                                <span>Hébergement ({nights} nuits)</span>
+                                <span className="font-bold">{totalAccommodation.toFixed(2)} €</span>
+                            </div>
+
+                            <div className="flex justify-between items-center text-sm text-slate-500">
+                                <span>Taxes de séjour (Obligatoire)</span>
+                                <span>{totalTaxes.toFixed(2)} €</span>
+                            </div>
+
+                            {wantsPool && (
+                                <div className="flex justify-between items-center text-emerald-600">
+                                    <span>Accès Piscine ({poolDays} jours)</span>
+                                    <span className="font-bold">+{totalPool.toFixed(2)} €</span>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="border-t border-amber-200 pt-6 mb-8">
+                            <div className="flex justify-between items-end">
+                                <span className="text-lg font-bold text-slate-800">Total à payer</span>
+                                <span className="text-4xl font-black text-amber-600">{grandTotal.toFixed(2)} €</span>
+                            </div>
+                            <p className="text-right text-xs text-slate-400 mt-2">Taxes et frais inclus</p>
+                        </div>
+
+                        <button
+                            onClick={() => alert(`Prêt pour le paiement Stripe de ${grandTotal.toFixed(2)} € !`)}
+                            className="w-full py-5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl rounded-2xl shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-1 active:translate-y-0"
+                        >
+                            Confirmer et Payer
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
     );
