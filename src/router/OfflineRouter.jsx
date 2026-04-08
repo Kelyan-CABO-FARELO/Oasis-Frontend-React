@@ -4,6 +4,7 @@ import Home from "../screens/OfflineScreens/Home.jsx";
 import Product from "../screens/OfflineScreens/Product.jsx";
 import ProductId from "../screens/OfflineScreens/ProductId.jsx";
 import Checkout from "../screens/OfflineScreens/Checkout.jsx";
+import Success from "../screens/OfflineScreens/Succes.jsx";
 
 const OfflineRouter = createBrowserRouter([
     {
@@ -24,6 +25,10 @@ const OfflineRouter = createBrowserRouter([
             {
                 path: "/checkout",
                 element: <Checkout/>
+            },
+            {
+                path: "/success",
+                element: <Success/>
             }
         ],
     },
