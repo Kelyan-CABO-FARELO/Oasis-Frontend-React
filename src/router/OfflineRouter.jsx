@@ -6,6 +6,7 @@ import ProductId from "../screens/OfflineScreens/ProductId.jsx";
 import Checkout from "../screens/OfflineScreens/Checkout.jsx";
 import Success from "../screens/OfflineScreens/Succes.jsx";
 import ManageBooking from "../screens/OfflineScreens/ManageBooking.jsx";
+import Login from "../screens/OfflineScreens/Login.jsx";
 
 const OfflineRouter = createBrowserRouter([
     {
@@ -34,6 +35,10 @@ const OfflineRouter = createBrowserRouter([
             {
                 path: "/manage-booking/:id",
                 element: <ManageBooking/>
+            },
+            {
+                path: "/login",
+                element: <Login/>
             }
         ],
     },
