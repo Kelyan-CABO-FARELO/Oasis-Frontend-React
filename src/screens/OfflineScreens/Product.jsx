@@ -73,12 +73,18 @@ const Product = () => {
     };
 
     useEffect(() => {
-        fetchProducts(false);
-        // Si des dates sont déjà présentes dans le store, on peut afficher la carte
-        if (searchParams.startDate && searchParams.endDate) {
-            setHasSearched(true);
-            fetchProducts(true);
-        }
+        const loadData = async () => {
+            // 1. On charge d'abord le catalogue complet (sans filtre)
+            await fetchProducts(false);
+
+            // 2. SEULEMENT APRÈS, s'il y a des dates, on filtre les disponibilités
+            if (searchParams.startDate && searchParams.endDate) {
+                setHasSearched(true);
+                await fetchProducts(true);
+            }
+        };
+
+        loadData();
     }, []);
 
     const handleSearch = (e) => {
