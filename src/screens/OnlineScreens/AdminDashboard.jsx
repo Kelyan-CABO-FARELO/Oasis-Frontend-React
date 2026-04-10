@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
+import ReservationList from "../../components/Admin/ReservationList.jsx";
 
 const AdminDashboard = () => {
     const { nickname, signOut } = useAuthContext();
@@ -68,7 +69,17 @@ const AdminDashboard = () => {
 
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[60vh]">
                     {activeTab === 'overview' && <p>📈 Bienvenue sur le tableau de bord ! Sélectionnez un menu à gauche pour commencer.</p>}
-                    {activeTab === 'reservations' && <p>📅 (Composant de la liste des réservations à venir...)</p>}
+
+                    {/* Liste des réservations */}
+                    {activeTab === 'reservations' && (
+                        <div>
+                            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+                                📅 Liste des Réservations
+                            </h2>
+                            {/* On appelle le composant proprement */}
+                            <ReservationList />
+                        </div>
+                    )}
                     {activeTab === 'users' && <p>👥 (Composant de la liste des utilisateurs à venir...)</p>}
                     {activeTab === 'products' && <p>🏕️ (Composant de la liste des hébergements à venir...)</p>}
                 </div>
