@@ -7,9 +7,11 @@ import Checkout from "../screens/OfflineScreens/Checkout.jsx";
 import Success from "../screens/OfflineScreens/Succes.jsx";
 import ManageBooking from "../screens/OfflineScreens/ManageBooking.jsx";
 import Login from "../screens/OfflineScreens/Login.jsx";
+import MainLayout from "../components/Layout/MainLayout.jsx";
 
 const OfflineRouter = createBrowserRouter([
     {
+        element: <MainLayout />,
         errorElement: <ErrorPage/>, // Élément retourné en cas d'erreur
         children: [
             {

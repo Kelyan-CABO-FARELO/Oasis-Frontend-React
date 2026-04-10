@@ -51,6 +51,9 @@ const Login = () => {
 
     return (
         <div className="min-h-screen bg-[#fffdf0] flex items-center justify-center p-6">
+            <button onClick={() => navigate("/")} className="mb-8 font-bold text-amber-700 hover:text-amber-600 bg-amber-100 px-5 py-2 rounded-full flex items-center gap-2">
+                ← Retour à l'acceuil
+            </button>
             <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl p-10 border border-amber-50">
                 <div className="text-center mb-8">
                     <span className="text-4xl block mb-4">🔐</span>

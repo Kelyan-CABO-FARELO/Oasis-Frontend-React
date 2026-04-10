@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import {VIDEO_URL} from "../../constants/apiConstant.js";
 
 const Home = () => {
@@ -112,11 +113,6 @@ const Home = () => {
                     </aside>
                 </div>
             </main>
-
-            {/* Footer */}
-            <footer className="py-12 text-center text-slate-400 border-t border-amber-100">
-                <p className="font-medium italic">© {new Date().getFullYear()} Camping L'Oasis *** — Le soleil du sud.</p>
-            </footer>
         </div>
     );
 };
