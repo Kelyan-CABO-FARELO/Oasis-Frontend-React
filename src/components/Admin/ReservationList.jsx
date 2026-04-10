@@ -3,12 +3,18 @@ import { API_ROOT } from '../../constants/apiConstant.js';
 import { TOKEN_KEY } from '../../constants/appConstants.js';
 
 const ReservationList = () => {
+    // États pour les données
     const [reservations, setReservations] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // Mémorise la réservation sur laquelle on a cliqué
     const [selectedReservation, setSelectedReservation] = useState(null);
+
+    // 👇 NOUVEL ÉTAT : Le terme recherché dans la barre
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // États pour la pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     useEffect(() => {
         const fetchReservations = async () => {
@@ -24,8 +30,6 @@ const ReservationList = () => {
                 if (!response.ok) throw new Error("Impossible de charger les réservations.");
 
                 const data = await response.json();
-
-                console.log("Les données reçues :", data);
 
                 let list = [];
                 if (data.member) {
@@ -51,76 +55,162 @@ const ReservationList = () => {
         fetchReservations();
     }, []);
 
+    // 👇 RÉINITIALISATION : On retourne à la page 1 si on fait une nouvelle recherche
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    // 👇 LOGIQUE DE FILTRAGE (Recherche par nom ou prénom)
+    const filteredReservations = reservations.filter((res) => {
+        if (!searchTerm) return true; // Si la barre est vide, on garde tout
+
+        const fullName = res.user ? `${res.user.firstname} ${res.user.lastname}`.toLowerCase() : 'invité';
+        return fullName.includes(searchTerm.toLowerCase());
+    });
+
+    // 👇 LOGIQUE DE PAGINATION (Appliquée sur les résultats filtrés !)
+    const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentReservations = filteredReservations.slice(indexOfFirstItem, indexOfLastItem);
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
+
     if (isLoading) return <div className="text-slate-500 font-bold animate-pulse">Chargement des données...</div>;
     if (error) return <div className="text-red-500 font-bold">❌ {error}</div>;
 
     return (
-        <div className="overflow-x-auto relative">
-            <table className="w-full text-left border-collapse">
-                <thead>
-                <tr className="border-b-2 border-slate-100 text-slate-400 uppercase text-xs tracking-wider">
-                    <th className="pb-4 font-bold">N°</th>
-                    <th className="pb-4 font-bold">Client</th>
-                    <th className="pb-4 font-bold">Dates</th>
-                    <th className="pb-4 font-bold">Hébergement</th>
-                    <th className="pb-4 font-bold">Voyageurs</th>
-                    <th className="pb-4 font-bold">Statut</th>
-                    <th className="pb-4 font-bold text-right">Actions</th>
-                </tr>
-                </thead>
-                <tbody className="text-sm font-medium text-slate-700">
-                {reservations.length === 0 ? (
-                    <tr><td colSpan="7" className="py-8 text-center text-slate-400 italic">Aucune réservation trouvée.</td></tr>
-                ) : (
-                    reservations.map((res) => {
-                        const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
-                        const start = new Date(res.startDate).toLocaleDateString('fr-FR', dateOptions);
-                        const end = new Date(res.endDate).toLocaleDateString('fr-FR', dateOptions);
-
-                        // On prend le premier produit qui n'est pas la piscine comme hébergement principal
-                        const mainProduct = res.products?.find(p => !p.title.toLowerCase().includes('piscine'));
-                        const productTitle = mainProduct ? mainProduct.title : 'Inconnu';
-
-                        const estPaye = res.isPaid === true || res.paid === true;
-
-                        return (
-                            <tr key={res.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                <td className="py-4 font-black text-slate-900">#{res.id}</td>
-                                <td className="py-4">
-                                    {res.user ? `${res.user.firstname} ${res.user.lastname}` : 'Invité'}
-                                </td>
-                                <td className="py-4 text-slate-500">Du {start} au {end}</td>
-                                <td className="py-4">{productTitle}</td>
-                                <td className="py-4 text-slate-500">{res.nbAdult} Ad. / {res.nbChildren} Enf.</td>
-                                <td className="py-4">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${estPaye ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-                                            {estPaye ? 'Payé' : 'En attente'}
-                                        </span>
-                                </td>
-                                <td className="py-4 text-right">
-                                    <button
-                                        onClick={() => setSelectedReservation(res)}
-                                        className="text-amber-500 hover:text-amber-700 hover:bg-amber-100 font-bold px-4 py-2 bg-amber-50 rounded-lg transition-colors"
-                                    >
-                                        Détails
-                                    </button>
-                                </td>
-                            </tr>
-                        );
-                    })
-                )}
-                </tbody>
-            </table>
+        <div className="relative">
 
             {/* ========================================= */}
-            {/* 🪄 LA MODALE */}
+            {/* 🔍 BARRE DE RECHERCHE */}
+            {/* ========================================= */}
+            <div className="mb-6 bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between gap-4">
+                <div className="relative w-full max-w-md">
+                    <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 text-lg">
+                        🔍
+                    </span>
+                    <input
+                        type="text"
+                        placeholder="Rechercher par nom de client..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3 border-2 border-slate-100 rounded-xl focus:outline-none focus:border-amber-400 bg-slate-50 transition-colors font-medium text-slate-700"
+                    />
+                </div>
+                {searchTerm && (
+                    <div className="text-sm font-bold text-amber-600 bg-amber-50 px-4 py-2 rounded-lg">
+                        {filteredReservations.length} résultat(s) trouvé(s)
+                    </div>
+                )}
+            </div>
+
+            {/* ========================================= */}
+            {/* 📋 LE TABLEAU */}
+            {/* ========================================= */}
+            <div className="overflow-x-auto bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                    <tr className="border-b-2 border-slate-100 text-slate-400 uppercase text-xs tracking-wider">
+                        <th className="pb-4 pt-2 px-2 font-bold">N°</th>
+                        <th className="pb-4 pt-2 px-2 font-bold">Client</th>
+                        <th className="pb-4 pt-2 px-2 font-bold">Dates</th>
+                        <th className="pb-4 pt-2 px-2 font-bold">Hébergement</th>
+                        <th className="pb-4 pt-2 px-2 font-bold">Voyageurs</th>
+                        <th className="pb-4 pt-2 px-2 font-bold">Statut</th>
+                        <th className="pb-4 pt-2 px-2 font-bold text-right">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody className="text-sm font-medium text-slate-700">
+                    {currentReservations.length === 0 ? (
+                        <tr>
+                            <td colSpan="7" className="py-12 text-center text-slate-400">
+                                <span className="text-4xl block mb-3">🧐</span>
+                                Aucune réservation trouvée pour cette recherche.
+                            </td>
+                        </tr>
+                    ) : (
+                        currentReservations.map((res) => {
+                            const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
+                            const start = new Date(res.startDate).toLocaleDateString('fr-FR', dateOptions);
+                            const end = new Date(res.endDate).toLocaleDateString('fr-FR', dateOptions);
+
+                            const mainProduct = res.products?.find(p => !p.title.toLowerCase().includes('piscine'));
+                            const productTitle = mainProduct ? mainProduct.title : 'Inconnu';
+                            const estPaye = res.isPaid === true || res.paid === true;
+
+                            return (
+                                <tr key={res.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
+                                    <td className="py-4 px-2 font-black text-slate-900">#{res.id}</td>
+                                    <td className="py-4 px-2">
+                                        {res.user ? `${res.user.firstname} ${res.user.lastname}` : 'Invité'}
+                                    </td>
+                                    <td className="py-4 px-2 text-slate-500">Du {start} au {end}</td>
+                                    <td className="py-4 px-2">{productTitle}</td>
+                                    <td className="py-4 px-2 text-slate-500">{res.nbAdult} Ad. / {res.nbChildren} Enf.</td>
+                                    <td className="py-4 px-2">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${estPaye ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                {estPaye ? 'Payé' : 'En attente'}
+                                            </span>
+                                    </td>
+                                    <td className="py-4 px-2 text-right">
+                                        <button
+                                            onClick={() => setSelectedReservation(res)}
+                                            className="text-amber-500 hover:text-amber-700 hover:bg-amber-100 font-bold px-4 py-2 bg-amber-50 rounded-lg transition-colors"
+                                        >
+                                            Détails
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* ========================================= */}
+            {/* 🔽 CONTRÔLES DE PAGINATION */}
+            {/* ========================================= */}
+            {filteredReservations.length > 0 && (
+                <div className="flex items-center justify-between mt-6 px-2">
+                    <p className="text-sm text-slate-500 font-medium">
+                        Affichage de <span className="font-bold text-slate-900">{indexOfFirstItem + 1}</span> à <span className="font-bold text-slate-900">{Math.min(indexOfLastItem, filteredReservations.length)}</span> sur <span className="font-bold text-slate-900">{filteredReservations.length}</span>
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handlePrevPage}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                        >
+                            Précédent
+                        </button>
+                        <div className="px-4 py-2 bg-slate-50 border border-slate-100 text-slate-600 rounded-lg font-bold">
+                            Page {currentPage} / {totalPages}
+                        </div>
+                        <button
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                        >
+                            Suivant
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================= */}
+            {/* 🪄 LA MODALE DE DÉTAILS */}
             {/* ========================================= */}
             {selectedReservation && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-
                     <div className="bg-white rounded-[2rem] w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fade-in-up">
-
-                        {/* En-tête */}
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                             <div>
                                 <h3 className="text-2xl font-black text-slate-900">Réservation #{selectedReservation.id}</h3>
@@ -134,9 +224,7 @@ const ReservationList = () => {
                             </button>
                         </div>
 
-                        {/* Corps de la modale */}
                         <div className="p-8 overflow-y-auto space-y-8">
-
                             {/* Section Client */}
                             <div>
                                 <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">👤 Informations Client</h4>
@@ -170,7 +258,6 @@ const ReservationList = () => {
                                         <div>
                                             <p className="text-slate-500 text-sm font-bold mb-1">Hébergement</p>
                                             <p className="font-bold text-slate-900">
-                                                {/* On affiche le titre du produit qui n'est pas une piscine */}
                                                 {(() => {
                                                     const mainProd = selectedReservation.products?.find(p => !p.title.toLowerCase().includes('piscine'));
                                                     return mainProd ? mainProd.title : 'Non spécifié';
@@ -189,7 +276,6 @@ const ReservationList = () => {
 
                             {/* Section Options & Extras */}
                             {(() => {
-                                // 🔎 ON CHERCHE TOUS LES PRODUITS PISCINE (filter au lieu de find)
                                 const poolProducts = selectedReservation.products?.filter(p => p.title.toLowerCase().includes('piscine'));
                                 const hasPoolAccess = poolProducts && poolProducts.length > 0;
 
@@ -207,7 +293,6 @@ const ReservationList = () => {
                                                     {hasPoolAccess ? (
                                                         <>
                                                             <div className="flex flex-wrap gap-2 mt-2 mb-1">
-                                                                {/* On boucle pour afficher tous les billets (Adulte et Enfant) */}
                                                                 {poolProducts.map(p => (
                                                                     <span key={p.id} className="bg-white border border-sky-200 text-sky-700 px-2 py-1 rounded text-xs font-bold shadow-sm">
                                                                         {p.title}
@@ -250,7 +335,6 @@ const ReservationList = () => {
                     </div>
                 </div>
             )}
-
         </div>
     );
 };
