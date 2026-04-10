@@ -1,70 +1,55 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { RouterProvider } from "react-router-dom";
 import OfflineRouter from "./OfflineRouter.jsx";
+import OnlineRouter from "./OnlineRouter.jsx";
 import { useAuthContext } from "../contexts/AuthContext.jsx";
 import { TOKEN_KEY, USER_INFOS } from "../constants/appConstants.js";
 import PageLoader from "../components/Loader/PageLoader.jsx";
-import OnlineRouter from "./OnlineRouter.jsx";
-// Optionnel : une instance axios configurée
-// import api from "../services/api.js";
-
-const SessionContext = createContext({ inSession: false });
-export const useSessionContext = () => useContext(SessionContext);
 
 const AppRouter = () => {
-    const [inSession, setInSession] = useState(null);
-    const { setUserId, setEmail, setNickname } = useAuthContext();
+    const [isChecking, setIsChecking] = useState(true);
+    // 👇 On récupère directement userId et signOut du contexte
+    const { userId, setUserId, setEmail, setNickname, signOut } = useAuthContext();
 
     useEffect(() => {
         const checkUserSession = () => {
-            const token = localStorage.getItem(TOKEN_KEY); // 'token_jwt' par exemple
+            const token = localStorage.getItem(TOKEN_KEY);
             const userInfos = JSON.parse(localStorage.getItem(USER_INFOS));
 
             if (token && userInfos) {
                 try {
-                    // 1. Analyse du token (Vérification de l'expiration)
                     const payload = JSON.parse(atob(token.split('.')[1]));
                     const isTokenExpired = payload.exp * 1000 < Date.now();
 
                     if (isTokenExpired) {
-                        handleLogout();
+                        signOut(); // On utilise la fonction de déconnexion globale !
                     } else {
-                        // 2. Hydratation du contexte
                         setUserId(userInfos.userId);
                         setEmail(userInfos.email);
                         setNickname(userInfos.nickname);
-
-                        // 3. (Optionnel) Configurer le header par défaut pour Axios
-                        // api.defaults.headers.Authorization = `Bearer ${token}`;
-
-                        setInSession(true);
                     }
                 } catch (error) {
                     console.error("Token invalide", error);
-                    handleLogout();
+                    signOut();
                 }
-            } else {
-                setInSession(false);
             }
-        };
-
-        const handleLogout = () => {
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(USER_INFOS);
-            setInSession(false);
+            setIsChecking(false);
         };
 
         checkUserSession();
-    }, [setUserId, setEmail, setNickname]);
+    }, []); // 👈 On ne l'exécute qu'au chargement
 
-    if (inSession === null) {
+    if (isChecking) {
         return <PageLoader />;
     }
 
+    // 👇 LA MAGIE OPÈRE ICI :
+    // La propriété `key` force React à détruire et recréer le Routeur à chaque changement de connexion
     return (
-        <SessionContext.Provider value={{ inSession }}>
-            <RouterProvider router={inSession ? OnlineRouter : OfflineRouter} />
-        </SessionContext.Provider>
+        <RouterProvider
+            key={userId ? 'online' : 'offline'}
+            router={userId ? OnlineRouter : OfflineRouter}
+        />
     );
 };
 

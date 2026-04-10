@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'; // 👈 1. N'oublie pas l'import
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
 import { authService } from '../../services/authService.js';
 import ErrorMessage from '../../components/UI/ErrorMessage.jsx';
@@ -10,7 +10,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { signIn } = useAuthContext();
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // 👈 2. On initialise le hook de navigation
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -26,11 +26,10 @@ const Login = () => {
             // 1. On récupère le jeton depuis Symfony
             const token = await authService.login(credentials.email, credentials.password);
 
-            // 2. On décode grossièrement le token pour extraire l'email (LexikJWT l'y met par défaut sous "username")
+            // 2. On décode grossièrement le token pour extraire l'email
             const payload = JSON.parse(atob(token.split('.')[1]));
 
             // 3. On sauvegarde dans le contexte
-            // (Tu pourras ajuster l'objet "user" selon ce que ton API renvoie vraiment)
             const userInfos = {
                 userId: payload.id || 'admin',
                 email: payload.username || credentials.email,
@@ -39,8 +38,8 @@ const Login = () => {
 
             await signIn(userInfos, token);
 
-            // 4. La magie opère : AppRouter va détecter "inSession = true" et charger OnlineRouter !
-            navigate('/');
+            // Redirection native pour recharger le Routeur et afficher le Dashboard
+            window.location.href = '/';
 
         } catch (err) {
             setError(err.message);
@@ -50,10 +49,19 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#fffdf0] flex items-center justify-center p-6">
-            <button onClick={() => navigate("/")} className="mb-8 font-bold text-amber-700 hover:text-amber-600 bg-amber-100 px-5 py-2 rounded-full flex items-center gap-2">
-                ← Retour à l'acceuil
-            </button>
+        // 👇 3. Ajout de "flex-col" pour que le bouton soit bien au-dessus de la carte
+        <div className="min-h-screen bg-[#fffdf0] flex flex-col items-center justify-center p-6">
+
+            {/* 👇 Un petit conteneur pour aligner le bouton avec la carte */}
+            <div className="max-w-md w-full mb-6">
+                <button
+                    onClick={() => navigate("/")}
+                    className="font-bold text-amber-700 hover:text-amber-600 bg-amber-100 hover:bg-amber-200 px-5 py-2 rounded-full flex items-center gap-2 w-fit transition-colors"
+                >
+                    ← Retour à l'accueil
+                </button>
+            </div>
+
             <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-xl p-10 border border-amber-50">
                 <div className="text-center mb-8">
                     <span className="text-4xl block mb-4">🔐</span>

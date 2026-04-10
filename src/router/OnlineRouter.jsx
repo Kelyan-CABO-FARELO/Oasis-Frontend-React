@@ -1,17 +1,16 @@
-// src/router/OnlineRouter.jsx
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import React from "react";
-// Vous pourrez importer vos futures pages privées ici (ex: Dashboard)
+import AdminDashboard from "../screens/OnlineScreens/AdminDashboard.jsx";
 
 const OnlineRouter = createBrowserRouter([
     {
         path: "/",
-        element: (
-            <div className="p-10 text-center">
-                <h1 className="text-3xl font-bold text-emerald-600">Espace Connecté</h1>
-                <p>Bienvenue dans votre espace privé !</p>
-            </div>
-        ),
+        element: <AdminDashboard />,
+    },
+    //ROUTE ATTRAPE-TOUT : Redirige vers le Dashboard si l'URL est inconnue (ex: /login)
+    {
+        path: "*",
+        element: <Navigate to="/" replace />
     }
 ]);
 
