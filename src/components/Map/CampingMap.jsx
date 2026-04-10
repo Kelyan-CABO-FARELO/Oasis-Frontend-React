@@ -1,10 +1,18 @@
 import React, { useEffect, useRef } from 'react';
-// 🛑 1. NOUVEL IMPORT : On importe useNavigate pour changer de page
 import { useNavigate } from 'react-router-dom';
 
-const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOccupants, startDate, endDate, nbAdults, nbChildren }) => {
+const CampingMap = ({
+                        allProducts,
+                        availableProducts,
+                        selectedCategory,
+                        totalOccupants,
+                        startDate,
+                        endDate,
+                        nbAdults,
+                        nbChildren,
+                        isAdmin = false // 👈 Permet de savoir si c'est l'Admin (True) ou un Client (False)
+                    }) => {
     const svgRef = useRef(null);
-    // 🛑 2. INITIALISATION : On prépare la fonction de navigation
     const navigate = useNavigate();
 
     // 🧠 LE CERVEAU POUR DÉDUIRE LA CAPACITÉ
@@ -26,25 +34,48 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
         return 4;
     };
 
+    // ❄️ LOGIQUE DE FERMETURE ANNUELLE (Du 05 Mai au 10 Octobre)
+    const checkIsClosed = () => {
+        // 🛑 SÉCURITÉ : Si ce n'est PAS l'admin (donc un client), on ne bloque JAMAIS la carte
+        if (!isAdmin) return false;
+
+        // Si c'est l'admin, on regarde la date du jour (ou la date sélectionnée)
+        const targetDate = startDate ? new Date(startDate) : new Date();
+        const currentMonth = targetDate.getMonth(); // 0 = Janvier, 4 = Mai, 9 = Octobre
+        const currentDay = targetDate.getDate(); // Le jour exact du mois
+
+        // 1. Avant le mois de Mai (Janvier à Avril) : FERMÉ
+        if (currentMonth < 4) return true;
+
+        // 2. Pendant le mois de Mai, mais AVANT le 5 : FERMÉ
+        if (currentMonth === 4 && currentDay < 5) return true;
+
+        // 3. Après le mois d'Octobre (Novembre à Décembre) : FERMÉ
+        if (currentMonth > 9) return true;
+
+        // 4. Pendant le mois d'Octobre, mais APRÈS le 10 : FERMÉ
+        if (currentMonth === 9 && currentDay > 10) return true;
+
+        // Si on passe tous ces contrôles, c'est que le camping est OUVERT ! 🎉
+        return false;
+    };
+
+    const isClosed = checkIsClosed();
+
     useEffect(() => {
-        if (!svgRef.current || allProducts.length === 0) return;
+        if (!svgRef.current || allProducts?.length === 0) return;
 
         const elements = svgRef.current.querySelectorAll('[id^="product-"]');
 
         elements.forEach(el => {
-            // On ignore les sous-éléments avec un underscore
             if (el.id.includes('_')) return;
 
-            // On récupère l'ID exact du produit (de 1 à 90)
             const productId = parseInt(el.id.replace('product-', ''), 10);
-
-            // 🛑 SÉCURITÉ : On ignore les sous-rectangles des caravanes qui ont un ID > 90
             if (isNaN(productId) || productId > 90) return;
 
             const product = allProducts.find(p => p.id === productId);
             const isAvailable = availableProducts.some(p => p.id === productId);
 
-            // Si l'hébergement n'existe pas en BDD, on le grise
             if (!product) {
                 el.style.fill = "#E2E8F0";
                 el.style.opacity = "0.5";
@@ -60,8 +91,13 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
             else if (selectedCategory === 'caravane' && title.startsWith('caravane')) matchesCategory = true;
             else if (selectedCategory === 'emplacement' && title.startsWith('emplacement')) matchesCategory = true;
 
-            // Logique d'affichage
-            if (!matchesCategory || capacity < totalOccupants) {
+            // 🛑 Logique d'affichage (Avec priorité à la fermeture !)
+            if (isClosed) {
+                el.style.fill = "#cbd5e1"; // Gris
+                el.style.opacity = "0.4";
+                el.style.cursor = "not-allowed";
+                el.onclick = null; // Désactive le clic
+            } else if (!matchesCategory || capacity < totalOccupants) {
                 el.style.fill = "#E2E8F0";
                 el.style.opacity = "0.4";
                 el.style.cursor = "not-allowed";
@@ -82,25 +118,45 @@ const CampingMap = ({ allProducts, availableProducts, selectedCategory, totalOcc
                 else if (capacity >= 6) el.style.fill = "#8B5CF6";
             }
 
-            // Événement au clic
-            el.onclick = (e) => {
-                e.stopPropagation();
-                if (matchesCategory && isAvailable && capacity >= totalOccupants) {
-                    // On redirige EN EMBARQUANT les données de recherche dans le "state"
-                    navigate(`/product/${product.id}`, {
-                        state: { startDate, endDate, nbAdults, nbChildren }
-                    });
-                }
-            };
+            // Événement au clic (Uniquement si ouvert et disponible !)
+            if (!isClosed) {
+                el.onclick = (e) => {
+                    e.stopPropagation();
+                    if (matchesCategory && isAvailable && capacity >= totalOccupants) {
+                        navigate(`/product/${product.id}`, {
+                            state: { startDate, endDate, nbAdults, nbChildren }
+                        });
+                    }
+                };
+            }
         });
 
-    }, [availableProducts, allProducts, selectedCategory, totalOccupants, navigate]);
+    }, [availableProducts, allProducts, selectedCategory, totalOccupants, navigate, isClosed, startDate]);
 
     return (
-        <div className="w-full bg-white rounded-[2rem] shadow-xl p-4 md:p-8 border border-amber-50 overflow-hidden">
+        <div className="w-full bg-white rounded-[2rem] shadow-xl p-4 md:p-8 border border-amber-50 overflow-hidden relative">
+
             <div className="w-full relative cursor-grab active:cursor-grabbing">
+
+                {/* ❄️ LE FAMEUX BANDEAU "FERMÉ" (Visible que si l'admin regarde hors-saison) */}
+                {isClosed && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-sm rounded-2xl">
+                        <div className="bg-white px-10 py-8 rounded-[2rem] shadow-2xl text-center border-4 border-amber-500 transform -rotate-2">
+                            <span className="text-6xl block mb-4 drop-shadow-sm">❄️</span>
+                            <h3 className="text-3xl md:text-4xl font-black text-slate-800 uppercase tracking-widest">
+                                Domaine Fermé
+                            </h3>
+                            <p className="text-amber-600 font-bold mt-2 text-sm md:text-base uppercase tracking-wider">
+                                Période hors saison
+                            </p>
+                            <p className="text-slate-500 font-medium mt-4 text-sm max-w-sm mx-auto leading-relaxed">
+                                Le camping est ouvert exclusivement du <strong className="text-slate-700">5 Mai au 10 Octobre</strong>.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 <svg ref={svgRef} width="100%" viewBox="0 0 2774 2065" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Le même SVG qu'avant */}
                     <g id="PlanCamping" clipPath="url(#clip0_1_2)">
                         <rect width="2774" height="2065" fill="white"/>
                         <g id="Decor">

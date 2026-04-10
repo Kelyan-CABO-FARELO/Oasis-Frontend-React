@@ -1,102 +1,130 @@
-import React, { useState } from 'react';
-import { useAuthContext } from '../../contexts/AuthContext.jsx';
-import ReservationList from "../../components/Admin/ReservationList.jsx";
-import UserList from "../../components/Admin/UserList.jsx";
+import React, { useState, useEffect } from 'react';
+import ReservationList from '../../components/Admin/ReservationList.jsx';
+import UserList from '../../components/Admin/UserList.jsx';
+import CampingMap from '../../components/Map/CampingMap.jsx';
+import { productService } from '../../services/productService.js';
+import { useAuthContext } from '../../contexts/AuthContext.jsx'; // Pour la déconnexion
 
 const AdminDashboard = () => {
-    const { nickname, signOut } = useAuthContext();
-    const [activeTab, setActiveTab] = useState('overview');
+    const [activeTab, setActiveTab] = useState('reservations');
+    const { signOut } = useAuthContext();
 
-    const handleLogout = () => {
-        signOut(); // 1. On vide le localStorage et le contexte
-        window.location.href = '/'; // 2. Redirection native immédiate vers l'accueil !
-    }
+    // États pour la carte interactive
+    const [allProducts, setAllProducts] = useState([]);
+    const [availableProducts, setAvailableProducts] = useState([]);
+    const [loadingMap, setLoadingMap] = useState(true);
+
+    useEffect(() => {
+        const fetchMapData = async () => {
+            if (activeTab !== 'map') return;
+
+            setLoadingMap(true);
+            try {
+                const products = await productService.getAll();
+                const realHousing = products.filter(p => p.title && !p.title.toLowerCase().includes('piscine'));
+                setAllProducts(realHousing);
+
+                const today = new Date().toISOString().split('T')[0];
+                const available = await productService.getAvailable(today, today);
+                setAvailableProducts(available);
+
+            } catch (err) {
+                console.error("Erreur chargement Map:", err);
+            } finally {
+                setLoadingMap(false);
+            }
+        };
+
+        fetchMapData();
+    }, [activeTab]);
+
+    const getMenuClass = (tabName) => {
+        const isActive = activeTab === tabName;
+        return `w-full text-left px-4 py-3 rounded-xl font-bold flex items-center gap-3 transition-all duration-200 ${
+            isActive
+                ? 'bg-amber-100 text-amber-800 shadow-sm border border-amber-200'
+                : 'text-slate-600 hover:bg-amber-50 hover:text-amber-700'
+        }`;
+    };
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
+        <div className="min-h-screen bg-[#fffdf0] flex font-sans">
 
-            {/* BARRE LATÉRALE (SIDEBAR) */}
-            <aside className="w-64 bg-slate-900 text-white flex flex-col">
-                <div className="p-6 border-b border-slate-800">
-                    <h2 className="text-2xl font-black text-amber-500">L'Oasis<span className="text-white">.</span></h2>
-                    <p className="text-slate-400 text-sm mt-1">Espace Administration</p>
+            {/* SIDEBAR */}
+            <aside className="w-64 bg-white border-r border-amber-100 flex flex-col shadow-sm fixed h-full z-10">
+                <div className="p-6 border-b border-amber-100">
+                    <h1 className="text-2xl font-black text-slate-800 tracking-tight">
+                        Admin<span className="text-amber-500">Camp</span>
+                    </h1>
+                    <p className="text-xs text-amber-600 font-bold uppercase mt-1">Espace Gérant</p>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2 font-medium">
-                    <button
-                        onClick={() => setActiveTab('overview')}
-                        className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-amber-500 text-slate-900 font-bold' : 'hover:bg-slate-800 text-slate-300'}`}
-                    >
-                        📊 Vue d'ensemble
+                <nav className="flex-1 p-4 space-y-2">
+                    <button onClick={() => setActiveTab('reservations')} className={getMenuClass('reservations')}>
+                        <span className="text-xl">📅</span> Réservations
                     </button>
-                    <button
-                        onClick={() => setActiveTab('reservations')}
-                        className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === 'reservations' ? 'bg-amber-500 text-slate-900 font-bold' : 'hover:bg-slate-800 text-slate-300'}`}
-                    >
-                        📅 Réservations
+
+                    <button onClick={() => setActiveTab('users')} className={getMenuClass('users')}>
+                        <span className="text-xl">👥</span> Clients
                     </button>
-                    <button
-                        onClick={() => setActiveTab('users')}
-                        className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === 'users' ? 'bg-amber-500 text-slate-900 font-bold' : 'hover:bg-slate-800 text-slate-300'}`}
-                    >
-                        👥 Utilisateurs
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('products')}
-                        className={`w-full text-left px-4 py-3 rounded-xl transition-all ${activeTab === 'products' ? 'bg-amber-500 text-slate-900 font-bold' : 'hover:bg-slate-800 text-slate-300'}`}
-                    >
-                        🏕️ Hébergements
+
+                    <button onClick={() => setActiveTab('map')} className={getMenuClass('map')}>
+                        <span className="text-xl">🗺️</span> Plan du Camping
                     </button>
                 </nav>
 
-                <div className="p-4 border-t border-slate-800">
+                <div className="p-4 border-t border-amber-100">
                     <button
-                        onClick={handleLogout}
-                        className="w-full px-4 py-3 text-left text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-bold"
+                        onClick={signOut}
+                        className="w-full px-4 py-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition-colors flex items-center gap-3"
                     >
-                        🚪 Se déconnecter
+                        <span className="text-xl">🚪</span> Déconnexion
                     </button>
                 </div>
             </aside>
 
             {/* CONTENU PRINCIPAL */}
-            <main className="flex-1 p-10">
-                <header className="mb-10 flex justify-between items-end">
-                    <div>
-                        <h1 className="text-3xl font-black text-slate-900">Bonjour {nickname} 👋</h1>
-                        <p className="text-slate-500 mt-2">Gérez les données de votre camping en temps réel.</p>
-                    </div>
-                </header>
+            <main className="flex-1 ml-64 p-8">
 
-                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[60vh]">
-                    {activeTab === 'overview' && <p>📈 Bienvenue sur le tableau de bord ! Sélectionnez un menu à gauche pour commencer.</p>}
-
-                    {/* Liste des réservations */}
-                    {activeTab === 'reservations' && (
-                        <div>
-                            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-                                📅 Liste des Réservations
-                            </h2>
-                            {/* On appelle le composant proprement */}
-                            <ReservationList />
-                        </div>
-                    )}
-
-                    {/* Liste des Utilisateurs */}
-                    {activeTab === 'users' && (
-                        <div>
-                            <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-                                👥 Liste des Utilisateurs
-                            </h2>
-                            {/* On appelle le composant proprement */}
-                            <UserList />
-                        </div>
-                    )}
-
-                    {activeTab === 'products' && <p>🏕️ (Composant de la liste des hébergements à venir...)</p>}
+                <div className="mb-8">
+                    <h2 className="text-3xl font-black text-slate-800">
+                        {activeTab === 'reservations' && 'Gestion des Réservations'}
+                        {activeTab === 'users' && 'Base de données Clients'}
+                        {activeTab === 'map' && "Disponibilités en temps réel"}
+                    </h2>
+                    <p className="text-slate-600 font-medium mt-1">
+                        {activeTab === 'reservations' && 'Consultez et gérez les séjours de vos vacanciers.'}
+                        {activeTab === 'users' && 'Retrouvez les fiches détaillées de vos clients.'}
+                        {activeTab === 'map' && 'Visualisez les emplacements libres et occupés aujourd\'hui sur le domaine.'}
+                    </p>
                 </div>
-            </main>
 
+                <div className="animate-fade-in-up">
+                    {activeTab === 'reservations' && <ReservationList />}
+
+                    {activeTab === 'users' && <UserList />}
+
+                    {activeTab === 'map' && (
+                        <div className="bg-white rounded-[2rem] shadow-xl shadow-amber-900/5 border border-amber-50 p-2 overflow-hidden h-[750px] relative">
+                            {loadingMap ? (
+                                <div className="flex flex-col items-center justify-center h-full gap-4 text-amber-600 animate-pulse">
+                                    <span className="text-5xl">🗺️</span>
+                                    <p className="font-bold text-lg">Analyse du terrain en cours...</p>
+                                </div>
+                            ) : (
+                                <CampingMap
+                                    isAdmin={true}  /* 👈 L'Admin est activé ICI ! */
+                                    allProducts={allProducts}
+                                    availableProducts={availableProducts}
+                                    selectedCategory="all"
+                                    totalOccupants={0}
+                                />
+                            )}
+                        </div>
+                    )}
+                </div>
+
+            </main>
         </div>
     );
 };
