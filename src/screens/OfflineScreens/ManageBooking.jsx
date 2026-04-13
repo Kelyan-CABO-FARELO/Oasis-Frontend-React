@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, Navigate, useNavigate } from 'react-router-dom';
+import { API_ROOT } from '../../constants/apiConstant.js'; // 👈 NOUVEL IMPORT
 
 const ManageBooking = () => {
     const { id } = useParams();
@@ -13,13 +14,12 @@ const ManageBooking = () => {
 
     const [booking, setBooking] = useState(null);
     const [error, setError] = useState(null);
-
-    // 👇 Nouveaux states pour gérer l'option piscine
     const [isAddingPool, setIsAddingPool] = useState(false);
     const [poolDays, setPoolDays] = useState(1);
 
     useEffect(() => {
-        fetch(`http://localhost:8088/manage-booking/${id}?token=${token}`)
+        // 👇 CORRECTION : Ajout de API_ROOT et /api/
+        fetch(`${API_ROOT}/api/manage-booking/${id}?token=${token}`)
             .then(response => {
                 if (!response.ok) throw new Error("Ce lien magique est invalide, expiré, ou ne vous appartient pas.");
                 return response.json();
@@ -28,7 +28,6 @@ const ManageBooking = () => {
             .catch(err => setError(err.message));
     }, [id, token]);
 
-    // Calcul du nombre de nuits pour bloquer l'input "jours max"
     let nights = 1;
     if (booking) {
         const [d1, m1, y1] = booking.startDate.split('/');
@@ -38,12 +37,12 @@ const ManageBooking = () => {
         nights = Math.max(1, Math.ceil((dEnd - dStart) / (1000 * 60 * 60 * 24)));
     }
 
-    // FONCTION D'ANNULATION
     const handleCancelBooking = async () => {
         const isConfirmed = window.confirm("⚠️ Êtes-vous sûr de vouloir annuler ce séjour ? Cette action est irréversible.");
         if (isConfirmed) {
             try {
-                const response = await fetch(`http://localhost:8088/manage-booking/${id}/cancel?token=${token}`, { method: 'DELETE' });
+                // 👇 CORRECTION : Ajout de API_ROOT et /api/
+                const response = await fetch(`${API_ROOT}/api/manage-booking/${id}/cancel?token=${token}`, { method: 'DELETE' });
                 if (!response.ok) throw new Error("Erreur lors de l'annulation.");
                 alert("Votre réservation a été annulée et supprimée de nos systèmes.");
                 navigate('/');
@@ -53,12 +52,12 @@ const ManageBooking = () => {
         }
     };
 
-    // 👇 FONCTION D'AJOUT DE LA PISCINE
     const submitPoolOption = async () => {
         const isConfirmed = window.confirm(`Valider l'accès piscine pour ${poolDays} jour(s) ?\nLe règlement se fera à la réception.`);
         if (isConfirmed) {
             try {
-                const response = await fetch(`http://localhost:8088/manage-booking/${id}/add-pool?token=${token}`, {
+                // 👇 CORRECTION : Ajout de API_ROOT et /api/
+                const response = await fetch(`${API_ROOT}/api/manage-booking/${id}/add-pool?token=${token}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ poolDays: Number(poolDays) })
@@ -97,7 +96,7 @@ const ManageBooking = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#fffdf0] py-12 px-6">
+        <div className=" mt-10 min-h-screen bg-[#fffdf0] py-12 px-6">
             <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
 
                 <h1 className="text-4xl font-black text-slate-900 mb-2">Bonjour {booking.user?.firstname} 👋</h1>
@@ -106,8 +105,6 @@ const ManageBooking = () => {
                 </p>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                    {/* COLONNE GAUCHE : DÉTAILS */}
                     <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl border border-slate-100">
                             <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-3">🏕️ Votre Hébergement</h2>
@@ -141,7 +138,6 @@ const ManageBooking = () => {
                         </div>
                     </div>
 
-                    {/* COLONNE DROITE : ACTIONS DE GESTION */}
                     <div className="space-y-6">
                         <div className="bg-white p-8 rounded-[2rem] shadow-xl border border-slate-100">
                             <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-3">⚙️ Gestion</h2>
@@ -158,7 +154,6 @@ const ManageBooking = () => {
                                     📥 Télécharger ma facture
                                 </button>
 
-                                {/* 👇 NOUVEAU BLOC PISCINE */}
                                 {!isAddingPool ? (
                                     <button onClick={() => setIsAddingPool(true)} className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-sm">
                                         🏊‍♂️ Ajouter des options
@@ -196,7 +191,6 @@ const ManageBooking = () => {
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
