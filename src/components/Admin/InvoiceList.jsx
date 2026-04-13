@@ -68,9 +68,9 @@ const InvoiceList = () => {
     // Fonction pour calculer le total d'une facture (Si l'API renvoie les lignes)
     const calculateTotal = (lineInvoices) => {
         if (!lineInvoices || !Array.isArray(lineInvoices)) return 0;
-        // On additionne les prix (qui sont en centimes ou en euros selon ton Entité, on suppose centimes ici)
-        const total = lineInvoices.reduce((sum, line) => sum + (line.linePrice || 0), 0);
-        return total / 100; // Conversion centimes -> Euros
+        // On vérifie avec la Majuscule (LinePrice) ET la minuscule (linePrice) pour être sûr !
+        const total = lineInvoices.reduce((sum, line) => sum + (line.LinePrice || line.linePrice || 0), 0);
+        return total / 100;
     };
 
     if (isLoading) return <div className="text-emerald-600 font-bold animate-pulse text-lg">Chargement de la comptabilité... 🧾</div>;
@@ -203,8 +203,8 @@ const InvoiceList = () => {
                                             <tbody className="divide-y divide-slate-100">
                                             {selectedInvoice.lineInvoices.map((line, index) => (
                                                 <tr key={index} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="p-4 font-medium text-slate-700">{line.lineProduct}</td>
-                                                    <td className="p-4 font-bold text-slate-900 text-right">{(line.linePrice / 100).toFixed(2)} €</td>
+                                                    <td className="p-4 font-medium text-slate-700">{line.LineProduct || line.lineProduct}</td>
+                                                    <td className="p-4 font-bold text-slate-900 text-right">{((line.LinePrice || line.linePrice) / 100).toFixed(2)} €</td>
                                                 </tr>
                                             ))}
                                             </tbody>
