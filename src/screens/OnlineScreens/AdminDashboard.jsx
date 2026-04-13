@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ReservationList from '../../components/Admin/ReservationList.jsx';
 import UserList from '../../components/Admin/UserList.jsx';
 import CampingMap from '../../components/Map/CampingMap.jsx';
+// 👇 1. IMPORT DU NOUVEAU COMPOSANT
+import InvoiceList from '../../components/Admin/InvoiceList.jsx';
 import { productService } from '../../services/productService.js';
-import { useAuthContext } from '../../contexts/AuthContext.jsx'; // Pour la déconnexion
+import { useAuthContext } from '../../contexts/AuthContext.jsx';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('reservations');
@@ -68,6 +70,11 @@ const AdminDashboard = () => {
                         <span className="text-xl">👥</span> Clients
                     </button>
 
+                    {/* 👇 2. AJOUT DU BOUTON FACTURES */}
+                    <button onClick={() => setActiveTab('invoices')} className={getMenuClass('invoices')}>
+                        <span className="text-xl">🧾</span> Factures
+                    </button>
+
                     <button onClick={() => setActiveTab('map')} className={getMenuClass('map')}>
                         <span className="text-xl">🗺️</span> Plan du Camping
                     </button>
@@ -90,11 +97,13 @@ const AdminDashboard = () => {
                     <h2 className="text-3xl font-black text-slate-800">
                         {activeTab === 'reservations' && 'Gestion des Réservations'}
                         {activeTab === 'users' && 'Base de données Clients'}
+                        {activeTab === 'invoices' && 'Comptabilité & Factures'}
                         {activeTab === 'map' && "Disponibilités en temps réel"}
                     </h2>
                     <p className="text-slate-600 font-medium mt-1">
                         {activeTab === 'reservations' && 'Consultez et gérez les séjours de vos vacanciers.'}
                         {activeTab === 'users' && 'Retrouvez les fiches détaillées de vos clients.'}
+                        {activeTab === 'invoices' && 'Consultez les factures et surveillez les délais de conservation (3 ans).'}
                         {activeTab === 'map' && 'Visualisez les emplacements libres et occupés aujourd\'hui sur le domaine.'}
                     </p>
                 </div>
@@ -103,6 +112,9 @@ const AdminDashboard = () => {
                     {activeTab === 'reservations' && <ReservationList />}
 
                     {activeTab === 'users' && <UserList />}
+
+                    {/* 👇 3. AFFICHAGE DU COMPOSANT FACTURES */}
+                    {activeTab === 'invoices' && <InvoiceList />}
 
                     {activeTab === 'map' && (
                         <div className="bg-white rounded-[2rem] shadow-xl shadow-amber-900/5 border border-amber-50 p-2 overflow-hidden h-[750px] relative">
@@ -113,7 +125,7 @@ const AdminDashboard = () => {
                                 </div>
                             ) : (
                                 <CampingMap
-                                    isAdmin={true}  /* 👈 L'Admin est activé ICI ! */
+                                    isAdmin={true}
                                     allProducts={allProducts}
                                     availableProducts={availableProducts}
                                     selectedCategory="all"

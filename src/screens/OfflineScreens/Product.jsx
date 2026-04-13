@@ -104,7 +104,7 @@ const Product = () => {
 
     return (
         <div className="min-h-screen bg-[#fffdf0] p-6 md:p-12 font-sans text-slate-800 pb-24">
-            <button onClick={() => navigate(-1)} className="mb-8 font-bold text-amber-700 hover:text-amber-600 bg-amber-100 px-5 py-2 rounded-full flex items-center gap-2">
+            <button onClick={() => navigate(-1)} className="mb-8 mt-10 font-bold text-amber-700 hover:text-amber-600 bg-amber-100 px-5 py-2 rounded-full flex items-center gap-2">
                 ← Retour à l'accueil
             </button>
 

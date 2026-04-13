@@ -86,7 +86,7 @@ const BookingSummary = ({
                             )}
                             {children > 0 && (
                                 <p className="flex justify-between">
-                                    <span>Enfants ({children} personnes × {extras.piscineEnfant.toFixed(2)}€ × {poolOptions.poolDays}j)</span>
+                                    <span>Enfants ({children} personnes × {extras.piscineEnfant.toFixed(2)}€ × {poolOptions.poolDays} jours)</span>
                                     <span>{(extras.piscineEnfant * children * poolOptions.poolDays).toFixed(2)} €</span>
                                 </p>
                             )}
