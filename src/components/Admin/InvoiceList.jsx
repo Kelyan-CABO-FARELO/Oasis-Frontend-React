@@ -223,11 +223,25 @@ const InvoiceList = () => {
                                 </div>
                             </div>
 
-                            {/* Statut Document */}
+                            {/* Statut Document & Téléchargement */}
                             <div className="flex justify-end pt-4">
-                                <button disabled className="px-6 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl cursor-not-allowed flex items-center gap-2">
-                                    <span>📄</span> {selectedInvoice.path === 'generation_en_attente' ? 'PDF en attente de génération' : 'Télécharger le PDF'}
-                                </button>
+                                {selectedInvoice.path && selectedInvoice.path !== 'generation_en_attente' ? (
+                                    <a
+                                        href={`${API_ROOT}${selectedInvoice.path}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-900/10"
+                                    >
+                                        <span>📄</span> Télécharger le PDF (Facture)
+                                    </a>
+                                ) : (
+                                    <button
+                                        disabled
+                                        className="px-6 py-3 bg-slate-100 text-slate-400 font-bold rounded-xl cursor-not-allowed flex items-center gap-2 border border-slate-200"
+                                    >
+                                        <span>⏳</span> {selectedInvoice.path === 'generation_en_attente' ? 'Génération du PDF en cours...' : 'PDF non disponible'}
+                                    </button>
+                                )}
                             </div>
 
                         </div>

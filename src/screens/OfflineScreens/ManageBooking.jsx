@@ -150,9 +150,23 @@ const ManageBooking = () => {
                                     </span>
                                 </div>
 
-                                <button onClick={() => alert("Génération du PDF bientôt disponible !")} className="w-full py-4 bg-slate-100 text-slate-800 hover:bg-slate-200 rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-sm">
-                                    📥 Télécharger ma facture
-                                </button>
+                                {booking.invoicePath && booking.invoicePath !== 'generation_en_attente' ? (
+                                    <a
+                                        href={`${API_ROOT}${booking.invoicePath}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full py-4 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-sm border border-emerald-100"
+                                    >
+                                        📥 Télécharger ma facture (PDF)
+                                    </a>
+                                ) : (
+                                    <button
+                                        disabled
+                                        className="w-full py-4 bg-slate-100 text-slate-400 rounded-xl font-bold cursor-not-allowed flex items-center justify-center gap-3 shadow-sm"
+                                    >
+                                        📥 Facture en cours de génération...
+                                    </button>
+                                )}
 
                                 {!isAddingPool ? (
                                     <button onClick={() => setIsAddingPool(true)} className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-3 shadow-sm">
