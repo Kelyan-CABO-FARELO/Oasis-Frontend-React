@@ -2,8 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const CampingMap = ({
-                        allProducts = [], // 👈 Ajoute = [] par sécurité
-                        availableProducts = [], // 👈 Ajoute = [] par sécurité
+                        allProducts = [],
+                        availableProducts = [],
                         selectedCategory = 'all',
                         totalOccupants = 0,
                         startDate,
@@ -11,7 +11,7 @@ const CampingMap = ({
                         nbAdults,
                         nbChildren,
                         isAdmin = false,
-                        onProductSelect // 👈 AJOUTE CECI
+                        onProductSelect
                     }) => {
     const svgRef = useRef(null);
     const navigate = useNavigate();
@@ -37,27 +37,17 @@ const CampingMap = ({
 
     // ❄️ LOGIQUE DE FERMETURE ANNUELLE (Du 05 Mai au 10 Octobre)
     const checkIsClosed = () => {
-        // 🛑 SÉCURITÉ : Si ce n'est PAS l'admin (donc un client), on ne bloque JAMAIS la carte
         if (!isAdmin) return false;
 
-        // Si c'est l'admin, on regarde la date du jour (ou la date sélectionnée)
         const targetDate = startDate ? new Date(startDate) : new Date();
-        const currentMonth = targetDate.getMonth(); // 0 = Janvier, 4 = Mai, 9 = Octobre
-        const currentDay = targetDate.getDate(); // Le jour exact du mois
+        const currentMonth = targetDate.getMonth();
+        const currentDay = targetDate.getDate();
 
-        // 1. Avant le mois de Mai (Janvier à Avril) : FERMÉ
         if (currentMonth < 4) return true;
-
-        // 2. Pendant le mois de Mai, mais AVANT le 5 : FERMÉ
         if (currentMonth === 4 && currentDay < 5) return true;
-
-        // 3. Après le mois d'Octobre (Novembre à Décembre) : FERMÉ
         if (currentMonth > 9) return true;
-
-        // 4. Pendant le mois d'Octobre, mais APRÈS le 10 : FERMÉ
         if (currentMonth === 9 && currentDay > 10) return true;
 
-        // Si on passe tous ces contrôles, c'est que le camping est OUVERT ! 🎉
         return false;
     };
 
@@ -77,11 +67,18 @@ const CampingMap = ({
             const product = allProducts.find(p => p.id === productId);
             const isAvailable = availableProducts.some(p => p.id === productId);
 
+            // Si le produit n'existe pas dans la BDD
             if (!product) {
                 el.style.fill = "#E2E8F0";
                 el.style.opacity = "0.5";
+                el.style.cursor = "not-allowed";
+                el.style.pointerEvents = "none";
                 return;
             }
+
+            // 🔒 VÉRIFICATION : Le bien est vendu s'il a au moins 1 utilisateur lié
+            const productUsers = product.user || product.users || [];
+            const isSold = productUsers.length > 0;
 
             const title = product.title.toLowerCase();
             const capacity = extractCapacity(title);
@@ -92,25 +89,33 @@ const CampingMap = ({
             else if (selectedCategory === 'caravane' && title.startsWith('caravane')) matchesCategory = true;
             else if (selectedCategory === 'emplacement' && title.startsWith('emplacement')) matchesCategory = true;
 
-            // 🛑 Logique d'affichage (Avec priorité à la fermeture !)
+            // 🛑 LOGIQUE D'AFFICHAGE VISUEL
             if (isClosed) {
-                el.style.fill = "#cbd5e1"; // Gris
+                el.style.fill = "#cbd5e1";
                 el.style.opacity = "0.4";
+                el.style.pointerEvents = "none";
                 el.style.cursor = "not-allowed";
-                el.onclick = null; // Désactive le clic
+            } else if (isSold) {
+                // BIEN DÉJÀ VENDU : VISIBLE MAIS INCLIQUABLE
+                el.style.fill = "#334155"; // Gris très foncé
+                el.style.opacity = "0.8";
+                el.style.pointerEvents = "none"; // Bloque l'interaction CSS
+                el.style.cursor = "not-allowed";
+                el.onclick = null; // Sécurité JS
             } else if (!matchesCategory || capacity < totalOccupants) {
                 el.style.fill = "#E2E8F0";
                 el.style.opacity = "0.4";
-                el.style.cursor = "not-allowed";
-                el.style.transition = "all 0.3s ease";
-            } else if (!isAvailable) {
+                el.style.pointerEvents = "none";
+            } else if (!isAvailable && !onProductSelect) {
+                // Rouge car loué (Uniquement pour les clients, pas pour le gérant qui vend)
                 el.style.fill = "#EF4444";
                 el.style.opacity = "1";
-                el.style.cursor = "not-allowed";
-                el.style.transition = "all 0.3s ease";
+                el.style.pointerEvents = "none";
             } else {
+                // BIEN DISPONIBLE (Pour la location ou la vente)
                 el.style.opacity = "1";
                 el.style.cursor = "pointer";
+                el.style.pointerEvents = "auto";
                 el.style.transition = "all 0.3s ease";
 
                 if (capacity <= 3) el.style.fill = "#3B82F6";
@@ -119,46 +124,39 @@ const CampingMap = ({
                 else if (capacity >= 6) el.style.fill = "#8B5CF6";
             }
 
-            // Événement au clic (Uniquement si ouvert et disponible !)
-            if (!isClosed) {
-                // Événement au clic (Uniquement si ouvert et disponible !)
-                if (!isClosed) {
-                    el.onclick = (e) => {
-                        e.stopPropagation();
-                        if (matchesCategory && isAvailable && capacity >= totalOccupants) {
+            // 🎯 LOGIQUE DE CLIC (Seulement si c'est ouvert ET non vendu)
+            if (!isClosed && !isSold) {
+                el.onclick = (e) => {
+                    e.stopPropagation();
 
-                            // 👇 SI ON A FOURNI onProductSelect (comme dans l'admin), on l'utilise
-                            if (onProductSelect) {
+                    const canClick = onProductSelect
+                        ? matchesCategory
+                        : (matchesCategory && isAvailable && capacity >= totalOccupants);
 
-                                // Petite boucle pour remettre tous les points à la normale avant de colorer le nouveau
-                                elements.forEach(otherEl => {
-                                    if(otherEl.style.stroke === "white") otherEl.style.stroke = "black";
-                                });
-                                // On met une bordure blanche pour bien voir celui qu'on a sélectionné !
-                                el.style.stroke = "white";
-
-                                onProductSelect(product);
-
-                            } else {
-                                // SINON, c'est un client classique, on l'envoie sur la page du produit
-                                navigate(`/product/${product.id}`, {
-                                    state: { startDate, endDate, nbAdults, nbChildren }
-                                });
-                            }
+                    if (canClick) {
+                        if (onProductSelect) {
+                            elements.forEach(otherEl => {
+                                if(otherEl.style.stroke === "white") otherEl.style.stroke = "black";
+                            });
+                            el.style.stroke = "white";
+                            onProductSelect(product);
+                        } else {
+                            navigate(`/product/${product.id}`, {
+                                state: { startDate, endDate, nbAdults, nbChildren }
+                            });
                         }
-                    };
-                }
+                    }
+                };
             }
         });
 
-    }, [availableProducts, allProducts, selectedCategory, totalOccupants, navigate, isClosed, startDate]);
+    }, [availableProducts, allProducts, selectedCategory, totalOccupants, navigate, isClosed, startDate, onProductSelect]);
 
     return (
         <div className="w-full bg-white rounded-[2rem] shadow-xl p-4 md:p-8 border border-amber-50 overflow-hidden relative">
 
             <div className="w-full relative cursor-grab active:cursor-grabbing">
 
-                {/* ❄️ LE FAMEUX BANDEAU "FERMÉ" (Visible que si l'admin regarde hors-saison) */}
                 {isClosed && (
                     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-sm rounded-2xl">
                         <div className="bg-white px-10 py-8 rounded-[2rem] shadow-2xl text-center border-4 border-amber-500 transform -rotate-2">
@@ -380,13 +378,14 @@ const CampingMap = ({
                 </svg>
             </div>
 
+            {/* LÉGENDE MISE À JOUR */}
             <div className="flex justify-center gap-4 md:gap-6 mt-8 text-sm font-bold text-slate-600 flex-wrap">
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-blue-500"></span> 2 à 3 pers.</span>
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-emerald-500"></span> 4 pers.</span>
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-amber-500"></span> 5 pers.</span>
                 <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-purple-500"></span> 6 à 8 pers.</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-red-500"></span> Réservé</span>
-                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-slate-200"></span> Trop petit</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-red-500"></span> Loué / Réservé</span>
+                <span className="flex items-center gap-2"><span className="w-4 h-4 rounded-full bg-[#334155]"></span> Déjà Vendu</span>
             </div>
         </div>
     );
