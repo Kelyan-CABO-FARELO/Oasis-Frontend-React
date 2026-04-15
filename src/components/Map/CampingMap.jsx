@@ -2,15 +2,16 @@ import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const CampingMap = ({
-                        allProducts,
-                        availableProducts,
-                        selectedCategory,
-                        totalOccupants,
+                        allProducts = [], // 👈 Ajoute = [] par sécurité
+                        availableProducts = [], // 👈 Ajoute = [] par sécurité
+                        selectedCategory = 'all',
+                        totalOccupants = 0,
                         startDate,
                         endDate,
                         nbAdults,
                         nbChildren,
-                        isAdmin = false // 👈 Permet de savoir si c'est l'Admin (True) ou un Client (False)
+                        isAdmin = false,
+                        onProductSelect // 👈 AJOUTE CECI
                     }) => {
     const svgRef = useRef(null);
     const navigate = useNavigate();
@@ -120,14 +121,33 @@ const CampingMap = ({
 
             // Événement au clic (Uniquement si ouvert et disponible !)
             if (!isClosed) {
-                el.onclick = (e) => {
-                    e.stopPropagation();
-                    if (matchesCategory && isAvailable && capacity >= totalOccupants) {
-                        navigate(`/product/${product.id}`, {
-                            state: { startDate, endDate, nbAdults, nbChildren }
-                        });
-                    }
-                };
+                // Événement au clic (Uniquement si ouvert et disponible !)
+                if (!isClosed) {
+                    el.onclick = (e) => {
+                        e.stopPropagation();
+                        if (matchesCategory && isAvailable && capacity >= totalOccupants) {
+
+                            // 👇 SI ON A FOURNI onProductSelect (comme dans l'admin), on l'utilise
+                            if (onProductSelect) {
+
+                                // Petite boucle pour remettre tous les points à la normale avant de colorer le nouveau
+                                elements.forEach(otherEl => {
+                                    if(otherEl.style.stroke === "white") otherEl.style.stroke = "black";
+                                });
+                                // On met une bordure blanche pour bien voir celui qu'on a sélectionné !
+                                el.style.stroke = "white";
+
+                                onProductSelect(product);
+
+                            } else {
+                                // SINON, c'est un client classique, on l'envoie sur la page du produit
+                                navigate(`/product/${product.id}`, {
+                                    state: { startDate, endDate, nbAdults, nbChildren }
+                                });
+                            }
+                        }
+                    };
+                }
             }
         });
 
