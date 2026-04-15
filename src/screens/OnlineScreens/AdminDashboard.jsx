@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import ReservationList from '../../components/Admin/ReservationList.jsx';
 import UserList from '../../components/Admin/UserList.jsx';
 import CampingMap from '../../components/Map/CampingMap.jsx';
-// 👇 1. IMPORT DU NOUVEAU COMPOSANT
 import InvoiceList from '../../components/Admin/InvoiceList.jsx';
 import { productService } from '../../services/productService.js';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
+import OwnerRequests from '../../components/Admin/OwnerRequests.jsx';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('reservations');
@@ -78,6 +78,13 @@ const AdminDashboard = () => {
                     <button onClick={() => setActiveTab('map')} className={getMenuClass('map')}>
                         <span className="text-xl">🗺️</span> Plan du Camping
                     </button>
+
+                    <button
+                        onClick={() => setActiveTab('owner-requests')}
+                        className={activeTab === 'owner-requests' ? 'bg-emerald-50 text-emerald-700 ...' : '...'}
+                    >
+                        🤝 Demandes Propriétaires
+                    </button>
                 </nav>
 
                 <div className="p-4 border-t border-amber-100">
@@ -113,7 +120,6 @@ const AdminDashboard = () => {
 
                     {activeTab === 'users' && <UserList />}
 
-                    {/* 👇 3. AFFICHAGE DU COMPOSANT FACTURES */}
                     {activeTab === 'invoices' && <InvoiceList />}
 
                     {activeTab === 'map' && (
@@ -134,6 +140,8 @@ const AdminDashboard = () => {
                             )}
                         </div>
                     )}
+
+                    {activeTab === 'owner-requests' && <OwnerRequests />}
                 </div>
 
             </main>

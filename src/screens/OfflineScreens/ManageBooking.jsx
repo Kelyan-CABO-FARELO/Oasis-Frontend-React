@@ -56,7 +56,6 @@ const ManageBooking = () => {
         const isConfirmed = window.confirm(`Valider l'accès piscine pour ${poolDays} jour(s) ?\nLe règlement se fera à la réception.`);
         if (isConfirmed) {
             try {
-                // 👇 CORRECTION : Ajout de API_ROOT et /api/
                 const response = await fetch(`${API_ROOT}/api/manage-booking/${id}/add-pool?token=${token}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

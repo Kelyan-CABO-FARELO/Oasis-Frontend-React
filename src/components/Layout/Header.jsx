@@ -39,18 +39,31 @@ const Header = () => {
                     <Link to="/product" className={`${textColor} hover:text-amber-500 transition-colors`}>
                         Hébergements
                     </Link>
-                    <a href="mailto:kelyan.cf@gmail.com" className={`${textColor} hover:text-amber-500 transition-colors`}>
+                    <a href="mailto:contact@loasis.com" className={`${textColor} hover:text-amber-500 transition-colors`}>
                         Contact
                     </a>
                 </nav>
 
-                {/* Bouton d'action (Réserver) */}
-                <Link
-                    to="/product"
-                    className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-full shadow-lg transition-transform hover:-translate-y-0.5"
-                >
-                    Réserver
-                </Link>
+                {/* Espace Actions (Devenir Proprio + Réserver) */}
+                <div className="flex items-center gap-3">
+                    <Link
+                        to="/owner"
+                        className={`hidden lg:flex px-5 py-2 border-2 rounded-full font-bold transition-all duration-200 hover:-translate-y-0.5 ${
+                            isScrolled || !isHome
+                                ? "border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                                : "border-white/80 text-white hover:bg-white/10"
+                        }`}
+                    >
+                        Devenir propriétaire
+                    </Link>
+
+                    <Link
+                        to="/product"
+                        className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-full shadow-lg transition-transform hover:-translate-y-0.5"
+                    >
+                        Réserver
+                    </Link>
+                </div>
             </div>
         </header>
     );

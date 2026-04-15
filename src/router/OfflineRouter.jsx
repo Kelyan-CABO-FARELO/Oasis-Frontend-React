@@ -8,6 +8,7 @@ import Success from "../screens/OfflineScreens/Succes.jsx";
 import ManageBooking from "../screens/OfflineScreens/ManageBooking.jsx";
 import Login from "../screens/OfflineScreens/Login.jsx";
 import MainLayout from "../components/Layout/MainLayout.jsx";
+import Owner from "../screens/OfflineScreens/Owner.jsx";
 
 const OfflineRouter = createBrowserRouter([
     {
@@ -41,6 +42,10 @@ const OfflineRouter = createBrowserRouter([
             {
                 path: "/login",
                 element: <Login/>
+            },
+            {
+                path: "/owner",
+                element: <Owner/>
             }
         ],
     },
