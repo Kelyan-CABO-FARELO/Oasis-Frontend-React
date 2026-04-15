@@ -14,27 +14,39 @@ const OwnerRequests = () => {
     const [clientSecret, setClientSecret] = useState('');
 
     useEffect(() => {
-        // 1. Récupérer les prospects (users)
+        // 1. Récupérer TOUS les users proprement
         fetch(`${API_ROOT}/api/users`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
+                'Accept': 'application/ld+json' // 👈 TRÈS IMPORTANT
+            }
         })
             .then(res => res.json())
             .then(data => {
-                const allUsers = data['hydra:member'] || [];
-                // On ne garde que les prospects non-propriétaires
+                // On gère tous les formats de réponse possibles d'API Platform
+                let allUsers = data['hydra:member'] || data.member || (Array.isArray(data) ? data : []);
+
+                // 💡 ON FILTRE CÔTÉ REACT : On ne garde que les prospects non-propriétaires !
                 const filteredProspects = allUsers.filter(user =>
                     user.wantsToBecomeOwner === true && user.isOwner === false
                 );
+
                 setProspects(filteredProspects);
                 setLoading(false);
             });
 
         // 2. Récupérer les biens disponibles (products)
         fetch(`${API_ROOT}/api/products`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}` }
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem(TOKEN_KEY)}`,
+                'Accept': 'application/ld+json'
+            }
         })
             .then(res => res.json())
-            .then(data => setProducts(data['hydra:member'] || []));
+            .then(data => {
+                let allProducts = data['hydra:member'] || data.member || (Array.isArray(data) ? data : []);
+                setProducts(allProducts);
+            });
     }, []);
 
     const handleGeneratePayment = async () => {
@@ -62,11 +74,11 @@ const OwnerRequests = () => {
         }
     };
 
-    if (loading) return <div className="p-10 text-center font-bold text-slate-400">Chargement des opportunités...</div>;
+    if (loading) return <div className="p-10 text-center font-bold text-slate-400">Recherche des opportunités... 🔍</div>;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <h2 className="text-2xl font-black text-slate-800">Demandes Propriétaires 🔑</h2>
+            <h2 className="text-3xl font-black text-slate-800">Demandes Propriétaires 🔑</h2>
 
             <div className="grid gap-4">
                 {prospects.length > 0 ? prospects.map(user => (
@@ -84,7 +96,8 @@ const OwnerRequests = () => {
                     </div>
                 )) : (
                     <div className="bg-slate-50 border-2 border-dashed border-slate-200 p-12 rounded-3xl text-center">
-                        <p className="text-slate-400 font-bold text-lg">Aucune demande en attente pour le moment. ☕</p>
+                        <span className="text-4xl block mb-3">☕</span>
+                        <p className="text-slate-500 font-bold text-lg">Aucune demande en attente pour le moment.</p>
                     </div>
                 )}
             </div>
@@ -148,9 +161,7 @@ const OwnerRequests = () => {
                                     <p className="text-emerald-700 font-medium text-sm">Le client a bien été rattaché à son bien et est officiellement enregistré comme propriétaire.</p>
                                 </div>
 
-                                {/* Ici tu pourras afficher le module Stripe Elements plus tard */}
-
-                                <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold shadow-lg">
+                                <button onClick={() => window.location.reload()} className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold shadow-lg hover:-translate-y-1 transition-transform">
                                     Terminer & Recharger la page
                                 </button>
                             </div>
