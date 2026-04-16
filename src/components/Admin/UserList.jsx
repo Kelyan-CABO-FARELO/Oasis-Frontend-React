@@ -130,6 +130,7 @@ const UserList = () => {
                     ) : (
                         currentUsers.map((user) => {
                             const isAdmin = user.roles && user.roles.includes('ROLE_ADMIN');
+                            const isOwner = user.roles && user.roles.includes('ROLE_OWNER');
 
                             return (
                                 <tr key={user.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
@@ -141,7 +142,7 @@ const UserList = () => {
                                     <td className="py-4 px-2 text-slate-500">{user.mobile || 'Non renseigné'}</td>
                                     <td className="py-4 px-2">
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${isAdmin ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
-                                            {isAdmin ? 'Administrateur' : 'Client'}
+                                            {isAdmin ? 'Administrateur' : isOwner ? 'Propriètaire' : 'Client'}
                                         </span>
                                     </td>
                                     <td className="py-4 px-2 text-right">

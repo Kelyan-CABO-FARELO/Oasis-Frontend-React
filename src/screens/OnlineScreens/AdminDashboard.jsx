@@ -79,9 +79,7 @@ const AdminDashboard = () => {
                         <span className="text-xl">🗺️</span> Plan du Camping
                     </button>
 
-                    <button
-                        onClick={() => setActiveTab('owner-requests')}
-                        className={activeTab === 'owner-requests' ? 'bg-emerald-50 text-emerald-700 ...' : '...'}
+                    <button onClick={() => setActiveTab('owner-requests')} className={getMenuClass('owner-requests')}
                     >
                         🤝 Demandes Propriétaires
                     </button>
