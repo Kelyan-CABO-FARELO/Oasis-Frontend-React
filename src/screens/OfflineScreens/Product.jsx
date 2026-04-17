@@ -4,8 +4,8 @@ import { API_URL } from "../../constants/apiConstant.js";
 import { useBookingContext } from "../../contexts/BookingContext.jsx";
 import PageLoader from "../../components/Loader/PageLoader.jsx";
 import ErrorMessage from "../../components/UI/ErrorMessage.jsx";
-import CampingMap from "../../components/Map/CampingMap.jsx";
 import SearchForm from "../../components/Product/SearchForm.jsx";
+import CampingMapProduct from "../../components/Map/CampingMapProduct.jsx";
 
 const Product = () => {
     const navigate = useNavigate();
@@ -141,7 +141,7 @@ const Product = () => {
                                 <span className="font-bold text-amber-600 animate-pulse text-lg">Recherche des disponibilités...</span>
                             </div>
                         )}
-                        <CampingMap
+                        <CampingMapProduct
                             allProducts={catalogProducts}
                             availableProducts={availableProducts}
                             selectedCategory={selectedCategory}
