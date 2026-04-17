@@ -265,9 +265,17 @@ const OwnerRequests = () => {
                                         <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
                                             <StripePaymentForm
                                                 amount={amount}
-                                                onSuccess={() => {
-                                                    alert("✅ Paiement validé ! Le bien a été transféré au nouveau propriétaire.");
-                                                    window.location.reload();
+                                                onSuccess={async () => {
+                                                    try {
+                                                        // Le paiement Stripe est validé, on demande au serveur de finaliser la paperasse !
+                                                        await apiFetch(`/users/${selectedUser.id}/confirm-sale`, { method: 'POST' });
+
+                                                        alert("✅ Paiement validé ! Le bien a été transféré et la facture a été envoyée par e-mail.");
+                                                    } catch (e) {
+                                                        console.error(e);
+                                                    } finally {
+                                                        window.location.reload(); // Quoi qu'il arrive, on recharge la page pour clore la vente
+                                                    }
                                                 }}
                                             />
                                         </Elements>
