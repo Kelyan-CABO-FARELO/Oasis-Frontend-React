@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // 👈 1. N'oublie pas l'import
+import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext.jsx';
 import { authService } from '../../services/authService.js';
 import ErrorMessage from '../../components/UI/ErrorMessage.jsx';
@@ -10,7 +10,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { signIn } = useAuthContext();
-    const navigate = useNavigate(); // 👈 2. On initialise le hook de navigation
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -23,22 +23,17 @@ const Login = () => {
         setError(null);
 
         try {
-            // 1. On récupère le jeton depuis Symfony
             const token = await authService.login(credentials.email, credentials.password);
-
-            // 2. On décode grossièrement le token pour extraire l'email
             const payload = JSON.parse(atob(token.split('.')[1]));
 
-            // 3. On sauvegarde dans le contexte
             const userInfos = {
                 userId: payload.id || 'admin',
                 email: payload.username || credentials.email,
-                nickname: 'Admin'
+                nickname: 'Utilisateur',
+                roles: payload.roles || [] // 👈 LA LECTURE DES RÔLES SE FAIT ICI
             };
 
             await signIn(userInfos, token);
-
-            // Redirection native pour recharger le Routeur et afficher le Dashboard
             window.location.href = '/';
 
         } catch (err) {
@@ -49,15 +44,9 @@ const Login = () => {
     };
 
     return (
-        // 👇 3. Ajout de "flex-col" pour que le bouton soit bien au-dessus de la carte
         <div className="min-h-screen bg-[#fffdf0] flex flex-col items-center justify-center p-6">
-
-            {/* 👇 Un petit conteneur pour aligner le bouton avec la carte */}
             <div className="max-w-md w-full mb-6">
-                <button
-                    onClick={() => navigate("/")}
-                    className="font-bold text-amber-700 hover:text-amber-600 bg-amber-100 hover:bg-amber-200 px-5 py-2 rounded-full flex items-center gap-2 w-fit transition-colors"
-                >
+                <button onClick={() => navigate("/")} className="font-bold text-amber-700 hover:text-amber-600 bg-amber-100 hover:bg-amber-200 px-5 py-2 rounded-full flex items-center gap-2 w-fit transition-colors">
                     ← Retour à l'accueil
                 </button>
             </div>
@@ -74,33 +63,14 @@ const Login = () => {
                 <form onSubmit={handleSubmit} className="space-y-6 mt-6">
                     <div>
                         <label className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 block">Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={credentials.email}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 focus:border-amber-400 outline-none transition-colors"
-                            required
-                        />
+                        <input type="email" name="email" value={credentials.email} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 focus:border-amber-400 outline-none transition-colors" required />
                     </div>
-
                     <div>
                         <label className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 block">Mot de passe</label>
-                        <input
-                            type="password"
-                            name="password"
-                            value={credentials.password}
-                            onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 focus:border-amber-400 outline-none transition-colors"
-                            required
-                        />
+                        <input type="password" name="password" value={credentials.password} onChange={handleChange} className="w-full px-4 py-3 rounded-xl border-2 border-slate-100 bg-slate-50 focus:border-amber-400 outline-none transition-colors" required />
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className={`w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${isLoading ? 'opacity-70' : 'hover:-translate-y-1'}`}
-                    >
+                    <button type="submit" disabled={isLoading} className={`w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg rounded-xl shadow-lg transition-all ${isLoading ? 'opacity-70' : 'hover:-translate-y-1'}`}>
                         {isLoading ? 'Connexion...' : 'Se connecter'}
                     </button>
                 </form>

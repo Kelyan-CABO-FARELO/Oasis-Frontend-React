@@ -9,6 +9,7 @@ import ManageBooking from "../screens/OfflineScreens/ManageBooking.jsx";
 import Login from "../screens/OfflineScreens/Login.jsx";
 import MainLayout from "../components/Layout/MainLayout.jsx";
 import Owner from "../screens/OfflineScreens/Owner.jsx";
+import CreatePassword from "../screens/OfflineScreens/CreatePassword.jsx";
 
 const OfflineRouter = createBrowserRouter([
     {
@@ -46,6 +47,10 @@ const OfflineRouter = createBrowserRouter([
             {
                 path: "/owner",
                 element: <Owner/>
+            },
+            {
+                path: "/password",
+                element: <CreatePassword />
             }
         ],
     },

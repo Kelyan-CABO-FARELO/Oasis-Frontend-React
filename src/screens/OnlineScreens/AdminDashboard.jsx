@@ -58,7 +58,7 @@ const AdminDashboard = () => {
                     <h1 className="text-2xl font-black text-slate-800 tracking-tight">
                         Admin<span className="text-amber-500">Camp</span>
                     </h1>
-                    <p className="text-xs text-amber-600 font-bold uppercase mt-1">Espace Gérant</p>
+                    <p className="text-xs text-amber-600 font-bold uppercase mt-1">Espace Admin</p>
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2">

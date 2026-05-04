@@ -8,43 +8,49 @@ import PageLoader from "../components/Loader/PageLoader.jsx";
 
 const AppRouter = () => {
     const [isChecking, setIsChecking] = useState(true);
-    // 👇 On récupère directement userId et signOut du contexte
-    const { userId, setUserId, setEmail, setNickname, signOut } = useAuthContext();
+    // 👇 On récupère setRoles
+    const { userId, setUserId, setEmail, setNickname, setRoles, signOut } = useAuthContext();
 
     useEffect(() => {
-        const checkUserSession = () => {
+        const checkUserSession = async () => {
             const token = localStorage.getItem(TOKEN_KEY);
-            const userInfos = JSON.parse(localStorage.getItem(USER_INFOS));
+            const userInfosStr = localStorage.getItem(USER_INFOS);
 
-            if (token && userInfos) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const isTokenExpired = payload.exp * 1000 < Date.now();
-
-                    if (isTokenExpired) {
-                        signOut(); // On utilise la fonction de déconnexion globale !
-                    } else {
-                        setUserId(userInfos.userId);
-                        setEmail(userInfos.email);
-                        setNickname(userInfos.nickname);
-                    }
-                } catch (error) {
-                    console.error("Token invalide", error);
-                    signOut();
-                }
+            // 🛑 LE VIGILE : Si le local storage est vide ou partiel, on nettoie TOUT !
+            if (!token || !userInfosStr) {
+                await signOut();
+                setIsChecking(false);
+                return; // On arrête l'exécution ici
             }
+
+            try {
+                const userInfos = JSON.parse(userInfosStr);
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const isTokenExpired = payload.exp * 1000 < Date.now();
+
+                if (isTokenExpired) {
+                    await signOut();
+                } else {
+                    setUserId(userInfos.userId);
+                    setEmail(userInfos.email);
+                    setNickname(userInfos.nickname);
+                    setRoles(userInfos.roles || payload.roles || []);
+                }
+            } catch (error) {
+                console.error("Données corrompues", error);
+                await signOut();
+            }
+
             setIsChecking(false);
         };
 
         checkUserSession();
-    }, []); // 👈 On ne l'exécute qu'au chargement
+    }, []);
 
     if (isChecking) {
         return <PageLoader />;
     }
 
-    // 👇 LA MAGIE OPÈRE ICI :
-    // La propriété `key` force React à détruire et recréer le Routeur à chaque changement de connexion
     return (
         <RouterProvider
             key={userId ? 'online' : 'offline'}
